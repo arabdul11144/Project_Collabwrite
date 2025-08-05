@@ -1,0 +1,276 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Background layer split into two */
+.login-background {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #d5dbff, #2A3457) left / 50.7% 100%
+      no-repeat,
+    linear-gradient(to right, #9da6dc 50%, #ffffff 50%);
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* Main card */
+.login-card {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 16px;
+  border: 2px solid #00aaff;
+  display: flex;
+  overflow: hidden;
+  background-color: white;
+  flex-wrap: wrap; /* allows stacking on small screens */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 3;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.4;
+  z-index: 2;
+
+
+}
+
+.circle1 {
+  width: 200px;
+  height: 200px;
+  top: -50px;
+  right: 50px;
+  background-color: #5a69a6;
+}
+
+.circle2 {
+  width: 500px;
+  height: 500px;
+  bottom: 10px;
+  right: 50px;
+  background-color: #5a69a6;
+}
+
+.circle3 {
+  width: 400px;
+  height: 400px;
+  bottom: 55px;
+  right: 100px;
+  background-color: #ffffff;
+}
+
+/*left*/
+.login-left {
+  flex: 1;
+  background: white;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-left {
+  background-color: #ffffff;
+  /* f4f5f8 */
+  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+  max-width: 350px;
+  padding-top: 5%;
+  padding-bottom: 5%;
+}
+
+.login-left h1 {
+  font-size: 24px;
+  color: #1d2d6e;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.login-left p {
+  font-size: 14px;
+  color: #1d2d6e;
+
+  font-weight: 500;
+}
+
+.login-left img {
+  width: 225px;
+  height: 200px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+}
+
+.login-left h2 {
+  font-size: 17px;
+  color: #1d2d6e;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+/* Right */
+.login-right {
+  flex: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(197, 209, 224, 0.9),
+    rgba(169, 169, 169, 0.8)
+  );
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+  border-radius: 12px;
+}
+
+.login-box {
+  padding: 40px 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 350px;
+  /* background-color: #f4f5f8;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+}
+
+.avatar {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.login-box h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  margin: 10px 0 5px;
+  color: #222;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.password-box {
+  position: relative;
+}
+
+.password-box input {
+  padding-right: 30px;
+}
+
+.forgot-password {
+  font-size: 13px;
+  display: block;
+  margin-top: -5px;
+  margin-bottom: 20px;
+  text-align: right;
+  text-decoration: none;
+  color: #1d2d6e;
+}
+
+button[type="submit"] {
+  width: 100%;
+  background-color: #1d1b70;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 14px;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  background: #bbb;
+  position: absolute;
+  top: 50%;
+  width: 40%;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.social-login {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.social-login button {
+  width: 30%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  color: white;
+}
+
+.google {
+  background-color: #db4437;
+}
+
+.facebook {
+  background-color: #3b5998;
+}
+
+.linkedin {
+  background-color: #0077b5;
+}
+
+.signup-text {
+  text-align: center;
+  font-size: 14px;
+}
+
+.signup-text a {
+  color: #1d2d6e;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.login-left img.logoimg {
+  width: 150px;
+  height: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
