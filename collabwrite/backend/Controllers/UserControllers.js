@@ -22,7 +22,7 @@ const addUser = async (req, res, next) => {
     const { name, gmail, age, address } = req.body;
     let users;
     try {
-        users = new User ({
+        users = new User({
             name,
             gmail,
             age,
@@ -65,7 +65,8 @@ const updateUser = async (req, res, next) => {
 
     try {
         users = await User.findByIdAndUpdate(id, { name: name, gmail: gmail, age: age, address: address });
-        users = await User.save();
+        // users = await User.save();
+        users = await User.findByIdAndUpdate(id, { name, gmail, age, address }, { new: true });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Server error" });

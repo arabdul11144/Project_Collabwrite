@@ -5,7 +5,8 @@ const router = express.Router();
 const User = require("../Models/UserModels");
 const UserController = require("../Controllers/UserControllers");
 
-// Defining a route: When someone visits GET /, it will run the function getAllUsers() from the controller.
+// Defining the routes://
+// eg: When someone visits GET /, it will run the function getAllUsers() from the controller.
 router.get("/", UserController.getAllUsers);
 router.post("/", UserController.addUser);
 router.get("/:id", UserController.getById);
