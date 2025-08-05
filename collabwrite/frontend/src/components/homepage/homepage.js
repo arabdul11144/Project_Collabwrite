@@ -12,19 +12,19 @@ function Homepage() {
   };
 
   const templates = [
-    { title: "Blank document", image: "\Blank document.png" },
-    { title: "Project Proposal", image: "\Project Proposal.png" },
-    { title: "Resume", image: "\Resume.png" },
-    { title: "Cover letter", image: "\Cover letter.png" },
-    { title: "Student report", image: "\Student report.png" },
+    { title: "Blank document", image: "./Blank document.png" },
+    { title: "Project Proposal", image: "./Project Proposal.png" },
+    { title: "Resume", image: "./Resume.png" },
+    { title: "Cover letter", image: "./Cover letter.png" },
+    { title: "Student report", image: "./Student report.png" },
   ];
 
   const recents = [
-    { title: "CV", image: "\CV.png" },
-    { title: "JAAAI", image: "\Jaaai.png" },
-    { title: "Assignment", image: "\Assignment.png" },
-    { title: "Request Letter", image: "\Request Letter.png" },
-    { title: "Browse New", image: "\Browse New.png" },
+    { title: "CV", image: "./CV.png" },
+    { title: "JAAAI", image: "./Jaaai.png" },
+    { title: "Assignment", image: "./Assignment.png" },
+    { title: "Request Letter", image: "./Request Letter.png" },
+    { title: "Browse New", image: "./Browse New.png" },
   ];
 
   return (
