@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 
 
-function Landing() {
+function Landingpage() {
   return (
     <div>
 
@@ -13,9 +13,9 @@ function Landing() {
         <div className="brand"><Link to='/landingpage'>CollabWrite</Link>
         </div>
         <nav className="nav">
-          <Link to='./aboutuspage'>About us</Link>
-          <Link to='./Featurespage'>Features</Link>
-          <Link to='./Contactpage'>Contact</Link>
+          <Link to='/aboutuspage'>About us</Link>
+          <Link to='/featurespage'>Features</Link>
+          <Link to='/contactpage'>Contact</Link>
           <Link to='/loginpage'>Log In</Link>
           <Link to='/signuppage'>Sign Up</Link>
         </nav>
@@ -34,7 +34,7 @@ function Landing() {
           <button className="cta-button">Try CollabWrite</button>
         </div>
         <div className="image">
-          <img src="\landing page\Group 33031.png" alt="img" alt="CollabWrite Preview" />
+          <img src="/landing page/Group 33031.png" alt="img" />
         </div>
       </section>
 
@@ -43,4 +43,4 @@ function Landing() {
   );
 }
 
-export default Landing;
+export default Landingpage;

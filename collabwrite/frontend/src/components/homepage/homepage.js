@@ -8,7 +8,7 @@ function Homepage() {
   const navigate = useNavigate();
 
   const handleTemplateClick = () => {
-    navigate('/editingpage');
+    navigate('/editor');
   };
 
   const templates = [

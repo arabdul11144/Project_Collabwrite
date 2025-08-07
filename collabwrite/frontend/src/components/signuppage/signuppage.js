@@ -61,7 +61,7 @@ function Registerpage() {
             <img src="\logo.png" alt="logo" className="logoimg" />
             <h1>Write, edit, and create together</h1>
             <p>where ideas flow and collaboration thrives. Join the space where teamwork brings words to life</p>
-            <img src="\logamico.png" alt="logamico" />
+            <img src="\signup\regamico.png" alt="logamico" />
             <h2>Create an account to join our space</h2>
           </div>
         </div>

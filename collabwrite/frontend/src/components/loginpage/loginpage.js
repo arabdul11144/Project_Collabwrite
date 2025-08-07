@@ -49,9 +49,9 @@ function Loginpage() {
 
 
     <div className="login-background">
-      <div class="circle circle1"></div>
-      <div class="circle circle2"></div>
-      <div class="circle circle3"></div>
+      <div className="circle circle1"></div>
+      <div className="circle circle2"></div>
+      <div className="circle circle3"></div>
 
 
       <div className="login-card">
@@ -59,7 +59,7 @@ function Loginpage() {
           <div className="content-left">
             <img src="\logo.png" alt="logo" className="logoimg" />
             <h1>Collaborate with us<br />Explore with us</h1>
-            <img src="\regamico.png" alt="logoamico" />
+            <img src="\loginpage\logamico.png" alt="logoamico" />
             <h2>Sign-in to join our space</h2>
           </div>
         </div>
