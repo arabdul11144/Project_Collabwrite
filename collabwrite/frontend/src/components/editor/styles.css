@@ -9,6 +9,141 @@ body {
   transition: all 0.3s ease;
 }
 
+
+/*sasan*/
+/* ====== Improved Cursor Styles ====== */
+.ql-cursors .ql-cursor-caret {
+  width: 4px !important;
+  opacity: 0.9;
+  border-radius: 2px;
+  z-index: 10;
+}
+
+/* Username label styling */
+.ql-cursors .ql-cursor-name {
+  position: absolute;
+  transform: translateY(-28px);
+  background: var(--cursor-color, rgba(0, 0, 0, 0.85));
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  z-index: 999;
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 0 2px #000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Label arrow */
+.ql-cursors .ql-cursor-name::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-top: 7px solid var(--cursor-color, rgba(0, 0, 0, 0.85));
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  transform: translateX(-50%);
+}
+
+/* Smooth movement */
+.ql-cursors .ql-cursor {
+  transition: transform 0.1s ease-in-out;
+}
+
+
+/* Colored author label */
+.author-label {
+  position: absolute;
+  padding: 4px 10px;
+  color: #9b5050;
+  font-weight: 600;
+  border-radius: 6px;
+  z-index: 9999;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: opacity 0.1s;
+  animation: fadeIn 0.1s ease-in-out;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/**/
+
+
+
+.ql-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.ql-editor th,
+.ql-editor td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.image-toolbar {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 1000;
+  font-size: 14px;
+}
+
+.image-toolbar button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.image-toolbar button:hover {
+  background: #eee;
+}
+
+.resizable-image {
+  position: relative;
+  display: inline-block;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #007bff;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  z-index: 1001;
+}
+
+/* Handle positions */
+.resize-handle.br { bottom: -5px; right: -5px; cursor: se-resize; }
+.resize-handle.bl { bottom: -5px; left: -5px; cursor: sw-resize; }
+.resize-handle.tr { top: -5px; right: -5px; cursor: ne-resize; }
+.resize-handle.tl { top: -5px; left: -5px; cursor: nw-resize; }
+
+
 /* Enhanced Logo */
 .logo-img {
   height: 40px;
