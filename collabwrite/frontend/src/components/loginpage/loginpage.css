@@ -142,9 +142,15 @@
 }
 
 .avatar {
-  font-size: 32px;
   text-align: center;
+  font-size: 32px;
   margin-bottom: 10px;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  line-height: 60px; 
+  margin-left: auto;
+  margin-right:auto;
 }
 
 .login-box h2 {

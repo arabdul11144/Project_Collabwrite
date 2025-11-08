@@ -1,10 +1,9 @@
-// app.js
-
 const express = require('express');
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
+
 
 const userRouter = require("./Routes/UserRoutes");
 require("./Models/UserModels");
@@ -13,7 +12,7 @@ require("./Models/Document");
 const app = express();
 const server = http.createServer(app);
 
-// ========= CORS =========
+//CORS
 const corsOptions = {
   origin: ["http://localhost:3000", "http://localhost:3001"],
   methods: ["GET", "POST"],
@@ -23,10 +22,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// ========= Routes =========
+
+
+//Routes
 app.use("/USERS", userRouter);
 
-// ========= Register =========
+//Register
 const User = mongoose.model("register");
 
 app.post("/register", async (req, res) => {
@@ -39,7 +40,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// ========= Login =========
+//Login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -55,7 +56,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// ========= WebSocket Server =========
+//WebSocket Server
 const io = socketIo(server, {
   cors: corsOptions,
   transports: ['websocket', 'polling']
@@ -230,7 +231,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// ========== Optional REST APIs ==========
+//Optional REST APIs
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -255,14 +256,14 @@ app.get('/api/chat/:roomId/users', (req, res) => {
   res.json(Array.from(chatRoom.users.values()));
 });
 
-// ========== MongoDB + Server Start ==========
-mongoose
-  .connect("mongodb+srv://admin:admin@collabwritecluster.qfwyw9d.mongodb.net/")
+//MongoDB + Server Start
+mongoose.connect("mongodb+srv://admin:admin@collabwrite.cs4f8da.mongodb.net/")
+
   .then(() => {
     console.log("Connected to MongoDB");
     const PORT = 5000;
     server.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`Server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => console.log(err));

@@ -1,0 +1,391 @@
+/* Qa.css */
+.Qa {
+  width: 100%;
+  min-width: fit-content;
+}
+
+.qa_contents {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+  background: linear-gradient(135deg, #dbedffff 20%, #d9e6f4ff 25%, #c8dff7ff 35%);
+  min-width: fit-content;
+  width: 100%;
+}
+
+.qa_content {
+  display: flex;
+  flex-direction: row;
+  padding: 0px 10px;
+}
+
+/* Feed.css */
+.feed {
+  display: flex;
+  flex-direction: column;
+  flex: 0.6;
+  border-radius: 20px;
+}
+
+/* Post.css */
+.post {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffffff 25%);
+  margin-top: 10px;
+  border: 1px #272222ff;
+  border-radius: 20px;
+  width: 1000px;
+  box-shadow: 0px 5px 8px -5px rgba(39, 53, 99, 0.5);
+  box-sizing: border-box;
+}
+
+.post__info {
+  display: flex;
+  align-items: center;
+}
+
+.post__info > h4 {
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.post__info > h4:hover {
+  text-decoration: underline;
+}
+
+.post__info > small {
+  margin-left: 10px;
+}
+
+.post__body {
+  display: flex;
+  flex-direction: column;
+  font-size: large;
+}
+
+.post__btnAnswer {
+  margin-left: auto;
+  cursor: pointer;
+  padding: 7px;
+  background-color: #222;
+  outline: none;
+  border: none;
+  color: lightgray;
+  font-weight: 300;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.post__btnAnswer:hover {
+  color: #222;
+  background: lightgray;
+}
+
+.post__footer {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.post__footer > .MuiSvgIcon-root {
+  color: gray;
+  margin-right: 40px;
+  cursor: pointer;
+}
+
+.post__footerAction {
+  background-color: lightgray;
+  padding: 5px;
+  align-items: center;
+  display: flex;
+  justify-content: space-around;
+  border-radius: 33px;
+}
+
+.post__footerAction > .MuiSvgIcon-root {
+  color: gray;
+  margin-right: 40px;
+  cursor: pointer;
+}
+
+.post__footerAction > .MuiSvgIcon-root:hover {
+  color: rgb(0, 140, 255);
+  margin-right: 40px;
+}
+
+.post__footerLeft {
+  margin-left: auto;
+}
+
+.post__footerLeft > .MuiSvgIcon-root {
+  color: gray;
+  cursor: pointer;
+  margin-left: 30px;
+}
+
+/* Modal Styles */
+.modal__question {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+.modal__question > h1 {
+  color: #8f1f1b;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.modal__question > p {
+  color: gray;
+  font-size: small;
+}
+
+.modal__answer {
+  display: flex;
+  padding-top: 20px;
+  flex: 1;
+}
+
+/* Modal Buttons */
+.modal__buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.modal__buttons .cancel {
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: gray;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 33px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.modal__buttons .cancel:hover {
+  color: red;
+  background-color: #f2f2f2;
+}
+
+.modal__buttons .add {
+  border: none;
+  outline: none;
+  background-color: #222;
+  color: white;
+  font-weight: 700;
+  padding: 10px 25px;
+  border-radius: 33px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.modal__buttons .add:disabled {
+  background-color: #747373ff;
+  cursor: not-allowed;
+}
+
+.modal__buttons .add:hover:not(:disabled) {
+  background-color: #eee;
+  color: #222;
+}
+
+/* Modal overlay */
+.react-responsive-modal-modal {
+  height: 400px;
+  width: 90vw !important;
+  height: 90vh !important;
+}
+
+.react-responsive-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* quoraBox.css */
+.quoraBox {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid lightgray;
+  background-color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  max-width: 1000px;
+}
+
+.quoraBox:hover {
+  border: 1px solid rgba(12, 13, 56, 1);
+}
+
+.quoraBox__info {
+  display: flex;
+  align-items: center;
+}
+
+.quoraBox__quora {
+  display: flex;
+  margin-top: 8px;
+  font-size: large;
+}
+
+/* Qaheader.css */
+.qHeader {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #12325aff 2.5%);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 2px 3px 6px rgba(187, 187, 187, 0.5);
+  padding: 0 20px;
+  height: 65px;
+  justify-content: center;
+}
+
+.qHeader-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.qHeader_logo > img {
+  height: 75px;
+  object-fit: contain;
+}
+
+.qHeader__icon {
+  padding: 25px;
+  margin: 0 5px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover effect only if NOT active */
+
+
+.qHeader__icon:hover:not(.active) svg {
+  color: #000;
+}
+
+.qHeader__icon svg {
+  font-size: 28px;
+  color: gray;
+  transition: color 0.3s;
+}
+
+/* Active state for clicked icons */
+.qHeader__icon.active {
+  background-color: #e3f2fd; /* light blue */
+}
+
+.qHeader__icon.active svg {
+  color: #1976d2; /* blue icon */
+}
+
+.qHeader__input {
+  display: flex;
+  align-items: center;
+  background-color: #ffffffff;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  padding: 6px 15px;
+  margin-left: 30px;
+  width: 500px;
+  transition: box-shadow 0.3s ease;
+}
+
+.qHeader__input:focus-within {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.qHeader__input svg {
+  color: gray;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.qHeader__input input {
+  background: transparent;
+  outline: none;
+  border: none;
+  margin-left: 10px;
+  width: 100%;
+  font-size: 14px;
+  color: #333;
+  padding: 5px 0;
+}
+
+.qHeader_Rem {
+  display: flex;
+  align-items: center;
+  margin-left: 0px;
+}
+
+.qHeader_Rem .MuiAvatar-root {
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  margin-right: 0px;
+}
+
+.qHeader_button {
+  margin-left: 0px;
+}
+
+.qHeader_button .MuiButton-root {
+  background-color: #222;
+  color: #fff;
+  text-transform: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.qHeader_button .MuiButton-root:hover {
+  background-color: #444;
+}
+
+.modal__title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(187, 187, 187, 0.5);
+}
+
+.modal__title > h5 {
+  color: gray;
+  font-size: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 30px;
+}
+
+.modal__title > h5:hover {
+  color: #b92b27;
+}
+
+.modal__info {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.modal__info > p {
+  margin-left: 10px;
+  font-size: small;
+  color: gray;
+}

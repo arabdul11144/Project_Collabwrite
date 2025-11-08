@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
 const schema = mongoose.Schema;
 
 const userSchema = new schema({
@@ -18,14 +20,26 @@ const userSchema = new schema({
         type: String,
         required: true
     }
-})
+});
 
-module.exports = mongoose.model(
-    "register", //file name
-    userSchema //function name
-);
+//Hash password before saving the user
+userSchema.pre("save", async function (next) {
+    // If password field hasn't been modified, skip hashing
+    if (!this.isModified("password")) return next();
+
+    try {
+        // Generate salt (adds randomness)
+        const salt = await bcrypt.genSalt(10);
+
+        // Hash password with salt
+        this.password = await bcrypt.hash(this.password, salt);
+
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 
-//Creates a model named "UserModel" using userSchema, and exports it for use in other files.
-//This allows you to interact with the "users" collection in MongoDB, performing CRUD operations in user documents.
-//The model is named "UserModel" and it uses the userSchema defined above.
+module.exports = mongoose.model("register", userSchema);
+

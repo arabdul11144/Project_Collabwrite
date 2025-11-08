@@ -18,27 +18,53 @@ function Loginpage() {
     setUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoginError(""); // Reset error message on new submission
+  //   try {
+  //     const response = await sendRequest();
+  //     console.log("Response:", response);
+  //     if (response.status === "ok") {
+  //       console.log("Login successful");
+  //       navigate('/homepage');
+  //     } else {
+  //       console.error("Login failed");
+  //       setLoginError("Invalid email or password");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error during login:", err);
+  //     setLoginError("Server error. Please try again.");
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoginError(""); // Reset error message on new submission
+    setLoginError("");
+
     try {
       const response = await sendRequest();
       console.log("Response:", response);
-      if (response.status === "ok") {
+
+      // Check backend message instead of 'status'
+      if (response.message === "Login successful!") {
         console.log("Login successful");
         navigate('/homepage');
       } else {
-        console.error("Login failed");
-        setLoginError("Invalid email or password");
+        setLoginError(response.message || "Invalid email or password");
       }
+
     } catch (err) {
       console.error("Error during login:", err);
       setLoginError("Server error. Please try again.");
     }
   };
 
+
+
+
+
   const sendRequest = async () => {
-    return await axios.post("http://localhost:5000/login", {
+    return await axios.post("http://localhost:5000/users/login", {
       email: user.email,
       password: user.password,
     }).then((res) => res.data);

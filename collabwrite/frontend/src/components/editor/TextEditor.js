@@ -11,6 +11,14 @@ import ShareModal from "./ShareModal";
 import SharePopup from './SharePopup';
 import Chat from './chat';
 import { io } from "socket.io-client";
+import "./QaForum";
+import "./Chatbot";
+import { useNavigate } from "react-router-dom";
+
+import Settings from "./Settings";
+import Notification from "./Notification";
+
+
 
 const TOOLBAR_OPTIONS = [
   [{ header: [1, 2, 3, false] }],
@@ -64,15 +72,63 @@ export default function TextEditor() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareBox, setShowShareBox] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  
+  const navigate = useNavigate();
+
   // Chat related states
   const [showChat, setShowChat] = useState(false);
   const [currentUser, setCurrentUser] = useState('');
   const [chatNotification, setChatNotification] = useState(0);
-  
+  const [chatReady, setChatReady] = useState(false);
+
+  // NEW FEATURE 1: Auto-save status indicator
+  const [autoSaveStatus, setAutoSaveStatus] = useState('saved'); // 'saving', 'saved', 'error'
+  const [lastSaved, setLastSaved] = useState(new Date());
+
+  // NEW FEATURE 2: Document version history
+  const [versionHistory, setVersionHistory] = useState([]);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
+  //Notification
+  const [notifications, setNotifications] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationsData] = useState([]);
+
+  //Settings
+  const [showSettings, setShowSettings] = useState(false);
+
+  const notifRef = useRef(null);
+  const notificationBtnRef = useRef(null);
+
   const shareBtnRef = useRef(null);
   const dropdownRef = useRef(null);
   const socket = useRef();
+
+  //notification
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showNotification &&
+        dropdownRef.current &&
+        notifRef.current &&
+        !notifRef.current.contains(e.target) &&
+        notificationBtnRef.current &&
+        !notificationBtnRef.current.contains(e.target)
+      ) {
+        setShowNotification(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotification]); 
+
+   // Delete a notification by id and section (new/old)
+  const handleDelete = (section, id) => {
+    setNotifications((prev) => ({
+      ...prev,
+      [section]: prev[section].filter((n) => n.id !== id),
+    }));
+  };
+
 
   // Initialize user with a persistent username
   useEffect(() => {
@@ -109,12 +165,23 @@ export default function TextEditor() {
     }
   };
 
+  // Enhanced auto-save with version history
+  const saveVersion = (content) => {
+    const version = {
+      id: Date.now(),
+      content: content,
+      timestamp: new Date(),
+      user: currentUser
+    };
+    setVersionHistory(prev => [version, ...prev.slice(0, 9)]); // Keep last 10 versions
+  };
+
   // Single Socket.IO connection for both document and chat
   useEffect(() => {
     if (!quill || !currentUser) return;
 
     // Connect to Socket.IO server
-    socket.current = io("http://localhost:4000");
+    socket.current = io("http://localhost:5000");
 
     // Document collaboration setup
     socket.current.emit("join-document", documentId);
@@ -123,12 +190,14 @@ export default function TextEditor() {
     socket.current.once("load-document", (document) => {
       quill.setContents(document);
       quill.enable();
+      setAutoSaveStatus('saved');
     });
 
     // Handle local document changes and send to others
     const handleChange = (delta, oldDelta, source) => {
       if (source !== "user") return;
       socket.current.emit("send-changes", delta);
+      setAutoSaveStatus('saving');
     };
     quill.on("text-change", handleChange);
 
@@ -148,23 +217,45 @@ export default function TextEditor() {
       }
     });
 
-    // Save document every 2 seconds
+    // Enhanced save with version tracking
     const interval = setInterval(() => {
+      const content = quill.getContents();
       socket.current.emit("save-document", {
         docId: documentId,
-        data: quill.getContents()
+        data: content
       });
+      
+      // Save version every minute
+      if (Date.now() - lastSaved.getTime() > 60000) {
+        saveVersion(content);
+        setLastSaved(new Date());
+      }
+      
+      setAutoSaveStatus('saved');
     }, 2000);
+
+    // Save error handler
+    socket.current.on("save-error", () => {
+      setAutoSaveStatus('error');
+    });
 
     // Cleanup
     return () => {
       clearInterval(interval);
       socket.current.off("receive-changes");
       socket.current.off("new-message");
+      socket.current.off("save-error");
       quill.off("text-change", handleChange);
       socket.current.disconnect();
     };
-  }, [quill, documentId, currentUser, showChat]);
+  }, [quill, documentId, currentUser, showChat, lastSaved]);
+
+  const restoreVersion = (version) => {
+    if (window.confirm(`Restore version from ${version.timestamp.toLocaleString()}?`)) {
+      quill.setContents(version.content);
+      setShowVersionHistory(false);
+    }
+  };
 
   const handleAction = (action) => {
     setOpenDropdown(null);
@@ -309,7 +400,7 @@ export default function TextEditor() {
           <img
             src="/logo.png"
             alt="Logo"
-            style={{ height: "40px" }}
+            className="logo-img"
           />
           {Object.entries(dropdowns).map(([menu, actions]) => (
             <div key={menu} className="dropdown">
@@ -328,40 +419,62 @@ export default function TextEditor() {
             </div>
           ))}
         </div>
+
+        {/* NEW FEATURE 1: Auto-save status indicator */}
+        <div className="auto-save-status">
+          <span className={`status-indicator ${autoSaveStatus}`}>
+            {autoSaveStatus === 'saving' && '💾 Saving...'}
+            {autoSaveStatus === 'saved' && '✅ Saved'}
+            {autoSaveStatus === 'error' && '⚠️ Error'}
+          </span>
+        </div>
         
         <div className="topbar-actions">
-          <button className="action-btn">AI</button>
-          <button className="action-btn">QA</button>
-          <button className="action-btn">Notification</button>
+          <button className="action-btn"
+           onClick={() => navigate("/bot")}
+          >
+            🤖 AI
+          </button>
+
+
+
+          <button 
+            className="action-btn" 
+            onClick={() => navigate("/qa")}
+          >
+            ❓ QA
+          </button>
+
+          {/* NEW FEATURE 2: Version History Button */}
+          <button 
+            className="action-btn" 
+            onClick={() => setShowVersionHistory(!showVersionHistory)}
+          >
+            📚 History
+          </button>
+
+          <button className="action-btn"
+          onClick={() => setShowNotification((prev) => !prev)}
+          aria-label="Notifications"> 🔔 Notification
+          </button>
+          {showNotification && (
+        <Notification
+        show={showNotification}
+        notifRef={notifRef}
+        notifications={notifications}
+        onDelete={handleDelete}
+        />
+        )}
+
           
           {/* Chat Button with notification badge */}
           <button 
-            className={`action-btn ${showChat ? 'chat-active' : ''}`}
+            className={`action-btn chat-btn ${showChat ? 'chat-active' : ''}`}
             onClick={toggleChat}
-            style={{
-              position: 'relative',
-              backgroundColor: showChat ? '#3b82f6' : '',
-              color: showChat ? 'white' : '',
-              transition: 'all 0.3s ease'
-            }}
           >
-            Chat
+            💬 Chat
             {chatNotification > 0 && !showChat && (
-              <span style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                borderRadius: '50%',
-                width: '20px',
-                height: '20px',
-                fontSize: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold'
-              }}>
+              <span className="notification-badge">
                 {chatNotification > 9 ? '9+' : chatNotification}
               </span>
             )}
@@ -369,22 +482,12 @@ export default function TextEditor() {
           
           <div ref={shareBtnRef} style={{ position: "relative", display: "inline-block" }}>
             <button className="action-share" onClick={() => setShowShareBox(!showShareBox)}>
-              Share
+              📤 Share
             </button>
 
             {showShareBox && (
-              <div className="share-box" style={{ 
-                position: 'absolute',
-                top: '100%',
-                right: '0',
-                maxWidth: "350px", 
-                background: "#06c9ef", 
-                padding: "20px", 
-                borderRadius: "10px", 
-                boxShadow: "0 0 5px rgba(0,0,0,0.2)",
-                zIndex: 1000
-              }}>
-                <h4 style={{ marginBottom: "15px", fontSize: "16px", marginTop: "5px" }}>
+              <div className="share-box">
+                <h4 className="share-title">
                   📤 Share Document
                 </h4>
 
@@ -393,53 +496,39 @@ export default function TextEditor() {
                   readOnly
                   value={`${window.location.origin}/documents/${documentId}`}
                   onClick={(e) => e.target.select()}
-                  style={{ 
-                    width: "100%", 
-                    padding: "6px", 
-                    marginBottom: "10px", 
-                    borderRadius: "4px", 
-                    border: "1px solid #ccc" 
-                  }}
+                  className="share-input"
                 />
 
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div className="share-actions">
                   <button
-                    style={{
-                      background: "#f44336",
-                      color: "white",
-                      padding: "6px 12px",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
+                    className="btn-close"
                     onClick={() => setShowShareBox(false)}
                   >
                     Close
                   </button>
                   <button
-                    style={{
-                      background: copySuccess ? "hsla(112, 86%, 23%, 1.00)" : "#51e800ff",
-                      color: "white",
-                      padding: "6px 12px",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
+                    className={`btn-copy ${copySuccess ? 'copied' : ''}`}
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/documents/${documentId}`);
                       setCopySuccess(true);
                       setTimeout(() => setCopySuccess(false), 2000);
                     }}
                   >
-                    {copySuccess ? "Copied!" : "Copy"}
+                    {copySuccess ? "✅ Copied!" : "📋 Copy"}
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          <button className="action-btn">Participate</button>
-          <button className="action-btn">Setting</button>
+          <button className="action-btn">👥 Participate</button>
+          <button className="action-btn settings-btn" onClick={() => setShowSettings(!showSettings)}
+          aria-label="Settings"
+          style={{
+              backgroundColor: showSettings ? "#ccc" : "transparent",
+              borderRadius: "8px",
+            }}>⚙️ Setting
+          </button>
         </div>
       </header>
 
@@ -452,38 +541,56 @@ export default function TextEditor() {
       />
 
       {/* Main content area */}
-      <div style={{ 
-        display: 'flex', 
-        height: 'calc(100vh - 70px)', // Adjust based on your header height
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="main-content">
         
         {/* Text Editor Container */}
         <div 
-          className="container" 
+          className="container editor-container" 
           ref={wrapperRef}
           style={{ 
-            flex: 1,
-            transition: 'margin-right 0.3s ease-in-out',
-            marginRight: showChat ? '350px' : '0px', // Make space for chat
-            minHeight: '100%'
+            marginRight: showChat ? '350px' : '0px',
           }}
         />
 
+        {/* NEW FEATURE 2: Version History Panel */}
+        {showVersionHistory && (
+          <div className="version-history-panel">
+            <div className="version-header">
+              <h3>📚 Version History</h3>
+              <button 
+                className="close-btn"
+                onClick={() => setShowVersionHistory(false)}
+              >
+                ✖️
+              </button>
+            </div>
+            <div className="version-list">
+              {versionHistory.length > 0 ? (
+                versionHistory.map((version) => (
+                  <div key={version.id} className="version-item">
+                    <div className="version-info">
+                      <div className="version-time">
+                        {version.timestamp.toLocaleString()}
+                      </div>
+                      <div className="version-user">by {version.user}</div>
+                    </div>
+                    <button 
+                      className="restore-btn"
+                      onClick={() => restoreVersion(version)}
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="no-versions">No versions saved yet</div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Chat Sidebar - Slide from right */}
-        <div style={{
-          position: 'fixed',
-          right: showChat ? '0' : '-350px',
-          top: '70px', // Adjust based on your header height
-          height: 'calc(100vh - 70px)',
-          width: '350px',
-          zIndex: 1000,
-          boxShadow: showChat ? '-2px 0 10px rgba(0,0,0,0.1)' : 'none',
-          transform: 'translateZ(0)', // Hardware acceleration
-          transition: 'right 0.3s ease-in-out',
-          backgroundColor: '#ffffff'
-        }}>
+        <div className={`chat-sidebar ${showChat ? 'chat-open' : ''}`}>
           {showChat && currentUser && (
             <Chat 
               roomId={documentId} // Use document ID as chat room
@@ -501,29 +608,17 @@ export default function TextEditor() {
         />
       )}
 
-      {/* Add custom styles for chat integration */}
-      <style jsx>{`
-        .chat-active {
-          background-color: #3b82f6 !important;
-          color: white !important;
-        }
-        
-        .topbar {
-          z-index: 1001; /* Ensure topbar stays above chat */
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .container {
-            margin-right: ${showChat ? '100vw' : '0'} !important;
-          }
-          
-          .chat-sidebar {
-            width: 100vw !important;
-            right: ${showChat ? '0' : '-100vw'} !important;
-          }
-        }
-      `}</style>
+       {/* Settings popup */}
+      <Settings show={showSettings} onClose={() => setShowSettings(false)} />
+
+      {/* Notification popup */}
+      <Notification
+        show={showNotification}
+        onClose={() => setShowNotification(false)}
+        notifications={notificationsData}
+      />
+
+
     </>
   );
 }

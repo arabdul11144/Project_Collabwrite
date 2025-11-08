@@ -1,0 +1,362 @@
+/* Enhanced Notification Styles */
+.notification-popup {
+  position: fixed;
+  top: 65px;
+  right: 270px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  width: 350px;
+  max-height: 600px;
+  z-index: 9999;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.notif-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.notif-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.notif-close:hover {
+  transform: scale(1.1);
+}
+
+.notif-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.notif-section {
+  margin-bottom: 20px;
+}
+
+.notif-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  padding: 10px 20px;
+  background: #f8f9fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notif-list {
+  padding: 0 10px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px;
+  margin: 8px 0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.notif-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notif-item.unread {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+}
+
+.notif-item.read {
+  background: #f8f9fa;
+  opacity: 0.8;
+}
+
+.notif-item.success {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+}
+
+.notif-item.warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+  border-left: 4px solid #ff9800;
+}
+
+.notif-item.error {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-left: 4px solid #f44336;
+}
+
+.notif-item.info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+}
+
+.notif-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.notif-icon.success { background: #4caf50; color: white; }
+.notif-icon.warning { background: #ff9800; color: white; }
+.notif-icon.error { background: #f44336; color: white; }
+.notif-icon.info { background: #2196f3; color: white; }
+
+.notif-content-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notif-message {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.notif-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.notif-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.notif-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #161616;
+}
+
+.notif-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notif-empty {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 20px;
+}
+
+.notif-footer {
+  padding: 10px 15px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notif-footer-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.notif-footer-btn:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* Toast Notification Styles */
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 400px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  animation: toastSlideIn 0.3s ease-out;
+  z-index: 10000;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.toast-success {
+  background: #4caf50;
+  color: white;
+}
+
+.toast-warning {
+  background: #ff9800;
+  color: white;
+}
+
+.toast-error {
+  background: #f44336;
+  color: white;
+}
+
+.toast-info {
+  background: #2196f3;
+  color: white;
+}
+
+.toast-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.toast-message {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  margin-left: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .notification-popup {
+    width: calc(100vw - 40px);
+    right: 20px;
+    top: 60px;
+  }
+  
+  .toast-notification {
+    left: 20px;
+    right: 20px;
+    min-width: auto;
+  }
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #f44336;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

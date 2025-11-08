@@ -1,4 +1,7 @@
 * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .header {
@@ -6,18 +9,13 @@
   justify-content: center;
   align-items: center;
   background: white;
-  padding-top: 30px;
-  padding-bottom: 30px;
   padding-left: 20px;
   padding-right: 60px;
   gap: 15px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  background: linear-gradient(
-      rgba(255, 255, 255, 0.7),
-      rgba(255, 255, 255, 0.7)
-    ),
-    url("C:/Users/Dell/Desktop/project/collabwrite/frontend/public/logo.png");
+  /* Removed the problematic background-image line */
+  /* If you have a logo.png in public folder, uncomment the next line: */
+  /* background-image: url('/logo.png'); */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -30,19 +28,25 @@
 }
 
 .logo {
-  width: 140px;
-  height: 110px;
+  width: 100px;
+  height: 80px;
 }
 
 .search-bar {
   width: 40%;
-  height: 50px;
+  height: 45px;
   padding: 8px 20px;
   margin-top: 12px;
   margin-left: 0px;
   border-radius: 30px;
-  border: 1px solid #b9b9b9;
+  border: 1px solid #02253dff;
   font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus {
+  border-color: #007bff;
 }
 
 .section {
@@ -52,30 +56,36 @@
 .section h2 {
   margin-bottom: 20px;
   color: #333;
+  text-align: left;
+  margin-left: 240px;
 }
 
 .card-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 25px;
+  padding-left: 30px;
+  padding-right: 20px;
   margin-left: 100px;
   margin-right: 100px;
+  justify-content: center;
 }
 
 .card {
-  width: 160px;
+  width: 180px;
   background: white;
-  border-radius: 10px;
+  border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  /* Removed margin-left as it's handled by gap in flex container */
 }
 
 .card img {
   width: 100%;
   border-radius: 10px 10px 0 0;
-  height: 200px;
+  height: -100px;
   object-fit: cover;
 }
 
@@ -83,8 +93,115 @@
   margin: 10px 0;
   font-weight: 500;
   color: #444;
+  padding: 0 10px;
 }
 
 .card:hover {
   transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* NEW: Loading states for fixing the image loading issue */
+.page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* NEW: Smooth fade-in effect for better loading experience */
+.fade-in {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.fade-in.loaded {
+  opacity: 1;
+}
+
+/* NEW: Prevent layout shift during image loading */
+.card {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card p {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* NEW: Image loading placeholder */
+.image-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    padding-left: 10px;
+    padding-right: 20px;
+  }
+  
+  .search-bar {
+    width: 60%;
+  }
+  
+  .card-row {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  
+  .card {
+    width: 140px;
+    min-height: 220px;
+  }
+  
+  .card img,
+  .image-placeholder {
+    height: 170px;
+  }
+  
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
 }
