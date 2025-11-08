@@ -1,6 +1,10 @@
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import './styles.css';
 import Quill from "quill";
+
+import QuillCursors from "quill-cursors";
+
+
 import "quill/dist/quill.snow.css";
 import { useParams } from "react-router-dom";
 import { saveAs } from "file-saver";
@@ -15,9 +19,35 @@ import "./QaForum";
 import "./Chatbot";
 import { useNavigate } from "react-router-dom";
 
+import Delta from "quill-delta";
+
+
+
 import Settings from "./Settings";
 import Notification from "./Notification";
 
+
+Quill.register("modules/cursors", QuillCursors);
+
+// ✅ Register a custom HTML blot to display raw HTML inside Quill
+const BlockEmbed = Quill.import("blots/block/embed");
+
+class HtmlEmbed extends BlockEmbed {
+  static create(value) {
+    const node = super.create();
+    node.innerHTML = value;
+    return node;
+  }
+
+  static value(node) {
+    return node.innerHTML;
+  }
+}
+
+HtmlEmbed.blotName = "html";
+HtmlEmbed.tagName = "div";
+
+Quill.register(HtmlEmbed);
 
 
 const TOOLBAR_OPTIONS = [
@@ -42,21 +72,30 @@ const dropdowns = {
     { label: "Rename", action: "rename" },
   ],
   Insert: [
-    { label: "Insert Image", action: "insert-image" },
-    { label: "Insert Table", action: "insert-table" },
-    { label: "Insert Link", action: "insert-link" },
-    { label: "Horizontal Line", action: "insert-line" },
-  ],
+  { label: "Insert Image", action: "insert-image" },
+  { label: "Insert Table", action: "insert-table" },
+  
+  { label: "Insert Link", action: "insert-link" },
+  { label: "Horizontal Line", action: "Horizontal-line" },
+],
+
+  
   Edit: [
-    { label: "Undo", action: "undo" },
-    { label: "Redo", action: "redo" },
+   
     { label: "Cut", action: "cut" },
     { label: "Copy", action: "copy" },
     { label: "Paste", action: "paste" },
+    { label: "Add Row to Table", action: "add-row" },
+  { label: "Add Column to Table", action: "add-column" },
+  { label: "Delete Row from Table", action: "delete-row" },
+  { label: "Delete Column from Table", action: "delete-column" },
+  { label: "Delete Table", action: "delete-table" },
     { label: "Select All", action: "select-all" },
     { label: "Find & Replace", action: "find-replace" },
   ],
   View: [
+     { label: "Undo", action: "undo" },
+    { label: "Redo", action: "redo" },
     { label: "Word Count", action: "word-count" },
     { label: "Fullscreen", action: "fullscreen" },
     { label: "Zoom In", action: "zoom-in" },
@@ -103,6 +142,14 @@ export default function TextEditor() {
   const dropdownRef = useRef(null);
   const socket = useRef();
 
+
+  const getUserColor = (userName) => {
+  const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#FFD93D", "#FF8C00"];
+  const index = userName.charCodeAt(0) % colors.length;
+  return colors[index];
+};
+
+
   //notification
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -134,6 +181,8 @@ export default function TextEditor() {
   useEffect(() => {
     let userName = localStorage.getItem('textEditor_userName');
     if (!userName) {
+
+
       // Generate a unique username
       userName = `User_${Math.floor(Math.random() * 1000)}`;
       localStorage.setItem('textEditor_userName', userName);
@@ -141,17 +190,43 @@ export default function TextEditor() {
     setCurrentUser(userName);
   }, []);
 
-  const wrapperRef = useCallback((wrapper) => {
-    if (wrapper == null) return;
-    wrapper.innerHTML = "";
-    const editor = document.createElement("div");
-    wrapper.append(editor);
-    const q = new Quill(editor, {
-      theme: "snow",
-      modules: { toolbar: TOOLBAR_OPTIONS },
-    });
-    setQuill(q);
-  }, []);
+
+
+const wrapperRef = useCallback((wrapper) => {
+  if (wrapper == null) return;
+  wrapper.innerHTML = "";
+  const editor = document.createElement("div");
+  wrapper.append(editor);
+
+  const q = new Quill(editor, {
+  theme: "snow",
+  modules: {
+    toolbar: TOOLBAR_OPTIONS,
+    cursors: true, // 👈 add this line
+  },
+});
+
+
+  setQuill(q);
+
+  // ✅ Add this fixed version
+  const clipboard = q.getModule("clipboard");
+
+// ✅ Prevent recursion and safely render HTML tables
+clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+  if (node.tagName === "TABLE") {
+    // Instead of convert(), just return the node as raw HTML
+    const tableHTML = node.outerHTML;
+    return new Delta().insert({ html: tableHTML });
+  }
+  return delta;
+});
+
+}, []);
+
+
+
+
 
   const toggleDropdown = (menu) => {
     setOpenDropdown((prev) => (prev === menu ? null : menu));
@@ -185,6 +260,68 @@ export default function TextEditor() {
 
     // Document collaboration setup
     socket.current.emit("join-document", documentId);
+
+
+    // Tell server that this user has joined (for color assignment)
+socket.current.emit("user-join", { user: currentUser });
+
+socket.current.emit("join-document", documentId);
+socket.current.emit("user-join", { user: currentUser });
+
+
+// Handle cursor events
+const cursors = quill.getModule("cursors");
+
+// When the user moves their cursor or selects text
+quill.on("selection-change", (range) => {
+  if (!range) return;
+  socket.current.emit("cursor-move", { user: currentUser, range });
+});
+
+// When another user's cursor moves
+socket.current.on("cursor-update", ({ user, range, color }) => {
+  if (user === currentUser) return; // don't show your own cursor
+  if (!cursors.cursors[user]) {
+
+ cursors.createCursor(user, user, color);
+
+  }
+  cursors.moveCursor(user, range);
+
+
+  // also set label background color to match cursor color
+const cursorElement = document.querySelector(`.ql-cursor[data-id="${user}"] .ql-cursor-name`);
+if (cursorElement) {
+  cursorElement.style.backgroundColor = color;
+  cursorElement.style.setProperty('--cursor-color', color);
+}
+
+});
+
+
+
+const userColor = getUserColor(currentUser);
+socket.current.emit("user-join", { user: currentUser, color: userColor });
+
+
+    
+
+// Broadcast cursor position when user moves it
+quill.on("selection-change", (range) => {
+  if (!range) return;
+  socket.current.emit("cursor-move", {
+    user: currentUser,
+    range: range,
+  });
+});
+
+// Listen for other users' cursor updates
+socket.current.on("cursor-update", ({ user, range, color }) => {
+  if (user === currentUser) return; // skip own cursor
+  cursors.createCursor(user, user, color);
+  cursors.moveCursor(user, range);
+});
+
 
     // Listen once for the initial document load
     socket.current.once("load-document", (document) => {
@@ -256,6 +393,154 @@ export default function TextEditor() {
       setShowVersionHistory(false);
     }
   };
+  // ✅ Floating Edit/Delete toolbar for images
+useEffect(() => {
+  if (!quill) return;
+
+  let toolbar = null;
+  let currentImg = null;
+  let resizeHandles = [];
+
+  // Helper: Remove resize handles
+  const removeResizeHandles = () => {
+    resizeHandles.forEach((h) => h.remove());
+    resizeHandles = [];
+  };
+
+  // Helper: Create resize handles
+  const createResizeHandles = (img) => {
+    const positions = ["tl", "tr", "bl", "br"];
+    positions.forEach((pos) => {
+      const handle = document.createElement("div");
+      handle.classList.add("resize-handle", pos);
+      document.body.appendChild(handle);
+
+      // Position the handles
+      const updateHandlePosition = () => {
+        const rect = img.getBoundingClientRect();
+        const offsetX = window.scrollX;
+        const offsetY = window.scrollY;
+
+        if (pos === "tl") {
+          handle.style.top = `${offsetY + rect.top - 5}px`;
+          handle.style.left = `${offsetX + rect.left - 5}px`;
+        } else if (pos === "tr") {
+          handle.style.top = `${offsetY + rect.top - 5}px`;
+          handle.style.left = `${offsetX + rect.right - 5}px`;
+        } else if (pos === "bl") {
+          handle.style.top = `${offsetY + rect.bottom - 5}px`;
+          handle.style.left = `${offsetX + rect.left - 5}px`;
+        } else if (pos === "br") {
+          handle.style.top = `${offsetY + rect.bottom - 5}px`;
+          handle.style.left = `${offsetX + rect.right - 5}px`;
+        }
+      };
+
+      updateHandlePosition();
+
+      // Drag-to-resize functionality
+      handle.onmousedown = (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = img.offsetWidth;
+        const startHeight = img.offsetHeight;
+
+        const onMouseMove = (eMove) => {
+          let newWidth = startWidth + (eMove.clientX - startX);
+          let newHeight = startHeight + (eMove.clientY - startY);
+
+          if (pos === "tl" || pos === "bl") newWidth = startWidth - (eMove.clientX - startX);
+          if (pos === "tl" || pos === "tr") newHeight = startHeight - (eMove.clientY - startY);
+
+          if (newWidth > 50 && newHeight > 50) {
+            img.style.width = `${newWidth}px`;
+            img.style.height = `${newHeight}px`;
+            updateHandlePosition();
+          }
+        };
+
+        const onMouseUp = () => {
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      };
+
+      resizeHandles.push(handle);
+    });
+  };
+
+  const showImageToolbar = (img) => {
+    // Remove existing toolbar and handles
+    if (toolbar) toolbar.remove();
+    removeResizeHandles();
+
+    currentImg = img;
+    createResizeHandles(img);
+
+    // Create toolbar
+    toolbar = document.createElement("div");
+    toolbar.className = "image-toolbar";
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✏️ Edit";
+    editBtn.onclick = () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = () => {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    };
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑️ Delete";
+    deleteBtn.onclick = () => {
+      img.remove();
+      toolbar.remove();
+      removeResizeHandles();
+    };
+
+    toolbar.appendChild(editBtn);
+    toolbar.appendChild(deleteBtn);
+    document.body.appendChild(toolbar);
+
+    // Position toolbar
+    const rect = img.getBoundingClientRect();
+    toolbar.style.top = `${window.scrollY + rect.top - 40}px`;
+    toolbar.style.left = `${window.scrollX + rect.left + rect.width - 100}px`;
+  };
+
+  const handleClick = (e) => {
+    if (e.target.tagName === "IMG") {
+      showImageToolbar(e.target);
+    } else {
+      // Clicked outside → remove toolbar and handles
+      if (toolbar) toolbar.remove();
+      removeResizeHandles();
+      toolbar = null;
+      currentImg = null;
+    }
+  };
+
+  document.addEventListener("click", handleClick);
+
+  return () => {
+    document.removeEventListener("click", handleClick);
+    if (toolbar) toolbar.remove();
+    removeResizeHandles();
+  };
+}, [quill]);
+
 
   const handleAction = (action) => {
     setOpenDropdown(null);
@@ -317,23 +602,155 @@ export default function TextEditor() {
         break;
 
       case "insert-link":
-        const url = prompt("Enter URL:");
-        if (url) {
-          const range = quill.getSelection();
-          if (range) quill.format("link", url);
-        }
-        break;
+  {
+    const range = quill.getSelection(true);
+    if (!range) {
+      alert("Please place your cursor where you want to insert the link.");
+      break;
+    }
 
-      case "insert-table":
-        quill.clipboard.dangerouslyPasteHTML(
-          quill.getSelection(true)?.index || 0,
-          `<table border="1" style="width:100%;"><tr><th>Header</th><th>Header</th></tr><tr><td>Cell</td><td>Cell</td></tr></table><br/>`
-        );
-        break;
+    const url = prompt("Enter the URL (e.g., https://example.com):");
+    if (!url) break;
 
-      case "insert-line":
-        quill.clipboard.dangerouslyPasteHTML(quill.getSelection(true)?.index || 0, "<hr />");
-        break;
+    const text = prompt("Enter display text for the link:") || url;
+
+    // Insert link text and make it clickable
+    quill.insertText(range.index, text, "link", url);
+    quill.setSelection(range.index + text.length, 0);
+  }
+  break;
+
+
+
+        case "insert-table":
+  const range = quill.getSelection(true);
+  const tableHTML = `
+    <table style="width:80%, hight:40%; border-collapse: collapse;">
+      <tr>
+        <th style="border:2px solid #141313ff; padding:16px;">Heading</th>
+        <th style="border:2px solid #040404ff; padding:16px;">Heading</th>
+      </tr>
+      <tr>
+        <td style="border:2px solid #090808ff; padding:8px;">Data</td>
+        <td style="border:2px solid #161515ff; padding:8px;">Data</td>
+      </tr>
+       <tr>
+        <td style="border:2px solid #000000ff; padding:8px;">Data</td>
+        <td style="border:2px solid #020202ff; padding:8px;">Data</td>
+      </tr>
+       <tr>
+        <td style="border:2px solid #060505ff; padding:8px;">Data</td>
+        <td style="border:2px solid #161515ff; padding:8px;">Data</td>
+      </tr>
+    </table><br/>
+  `;
+  quill.insertEmbed(range.index, "html", tableHTML);
+  break;
+
+
+case "add-row":
+  {
+    const table = quill.root.querySelector("table:last-of-type");
+    if (!table) {
+      alert("No table found. Insert a table first!");
+      break;
+    }
+
+    // Find the number of columns from the first row
+    const cols = table.rows[0]?.cells.length || 2;
+
+    // Create a new row
+    const newRow = table.insertRow(-1);
+    for (let i = 0; i < cols; i++) {
+      const cell = newRow.insertCell(i);
+      cell.style.border = "2px solid #1c1c1cff";
+      cell.style.padding = "8px";
+      cell.innerText = " ";
+    }
+  }
+  break;
+
+case "add-column":
+  {
+    const table = quill.root.querySelector("table:last-of-type");
+    if (!table) {
+      alert("No table found. Insert a table first!");
+      break;
+    }
+
+    // Add one new cell to each row
+    for (let row of table.rows) {
+      const newCell = row.insertCell(-1);
+      newCell.style.border = "2px solid #1c1b1bff";
+      newCell.style.padding = "8px";
+      newCell.innerText = " ";
+    }
+  }
+  break;
+
+case "delete-row":
+  {
+    const table = quill.root.querySelector("table:last-of-type");
+    if (!table) {
+      alert("No table found. Insert a table first!");
+      break;
+    }
+
+    // Delete the last row if it exists
+    if (table.rows.length > 1) {
+      table.deleteRow(-1);
+    } else {
+      alert("Cannot delete the last remaining row!");
+    }
+  }
+  break;
+
+case "delete-column":
+  {
+    const table = quill.root.querySelector("table:last-of-type");
+    if (!table) {
+      alert("No table found. Insert a table first!");
+      break;
+    }
+
+    const cols = table.rows[0]?.cells.length || 0;
+    if (cols <= 1) {
+      alert("Cannot delete the last remaining column!");
+      break;
+    }
+
+    // Delete the last cell of each row
+    for (let row of table.rows) {
+      row.deleteCell(-1);
+    }
+  }
+  break;
+
+case "delete-table":
+  {
+    const table = quill.root.querySelector("table:last-of-type");
+    if (!table) {
+      alert("No table found to delete!");
+      break;
+    }
+    table.remove();
+  }
+  break;
+
+
+
+
+
+      case "Horizontal-line":
+  {
+    const range = quill.getSelection(true);
+    quill.clipboard.dangerouslyPasteHTML(
+      range?.index || quill.getLength(),
+      "<hr style='border: 2px solid #000000ff; margin: 12px 0;'/>"
+    );
+  }
+  break;
+
 
       case "undo":
         quill.history.undo();
@@ -392,6 +809,7 @@ export default function TextEditor() {
     };
     reader.readAsText(e.target.files[0]);
   };
+  
 
   return (
     <>

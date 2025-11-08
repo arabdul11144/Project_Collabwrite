@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Settings.css";
 import ProfileSettings from "./ProfileSettings";
 
 export default function Settings({ show, onClose }) {
   const settingsRef = useRef(null);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
-
-
+  const navigate = useNavigate();
 
   const openProfileSettings = () => {
     setShowProfileSettings(true);
@@ -18,31 +18,46 @@ export default function Settings({ show, onClose }) {
 
   const handleProfileSave = (data) => {
     console.log("Profile saved:", data);
-    // Here you can add logic to send data to backend
+    // Add logic to send profile data to backend here
   };
 
+  const handleLogout = () => {
+    // ✅ Clear session or tokens
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+
+    // ✅ Optional message before redirect
+    
+
+    // ✅ Redirect to login page
+    navigate("/loginpage");
+
+  };
+
+  // If settings modal is not open, return nothing
   if (!show) return null;
 
   return (
     <>
-      <div
-        ref={settingsRef}
-        className="settings-container"
-      >
+      <div ref={settingsRef} className="settings-container">
         <strong className="settings-title">⚙️ Settings</strong>
 
-        <div className="setting-item" onClick={openProfileSettings} style={{ cursor: "pointer" }}>
-          <img src="/account.png" className="setting-icon" alt="" />
+        <div
+          className="setting-item"
+          onClick={openProfileSettings}
+          style={{ cursor: "pointer" }}
+        >
+          <img src="/account.png" className="setting-icon" alt="account" />
           <span>Profile Settings</span>
         </div>
 
         <div className="setting-item">
-          <img src="/changepassword.png" className="setting-icon" alt="" />
+          <img src="/changepassword.png" className="setting-icon" alt="password" />
           <span>Change Password</span>
         </div>
 
         <div className="setting-item">
-          <img src="/notification.png" className="setting-icon" alt="" />
+          <img src="/notification.png" className="setting-icon" alt="notifications" />
           <span>Notifications</span>
           <label style={{ marginLeft: "auto" }}>
             <input type="checkbox" /> Enable
@@ -59,8 +74,13 @@ export default function Settings({ show, onClose }) {
           </label>
         </div>
 
-        <div className="setting-item" onClick={() => alert("Logging out...")} style={{ cursor: "pointer" }}>
-          <img src="/logout.png" className="setting-icon" alt="" />
+        {/* ✅ Logout button */}
+        <div
+          className="setting-item"
+          onClick={handleLogout}
+          style={{ cursor: "pointer" }}
+        >
+          <img src="/logout.png" className="setting-icon" alt="logout" />
           <span style={{ color: "#f87171", fontWeight: "bold" }}>Logout</span>
         </div>
 
@@ -71,6 +91,7 @@ export default function Settings({ show, onClose }) {
         </div>
       </div>
 
+      {/* Profile Settings modal */}
       <ProfileSettings
         show={showProfileSettings}
         onClose={closeProfileSettings}
