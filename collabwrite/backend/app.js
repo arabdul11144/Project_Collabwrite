@@ -6,6 +6,7 @@ const socketIo = require("socket.io");
 
 require("dotenv").config();
 
+const QaRoutes = require("./Routes/QaRoutes"); // Q&A Forum API routes
 
 const userRouter = require("./Routes/UserRoutes");
 require("./Models/UserModels");
@@ -28,6 +29,7 @@ app.use(express.json());
 
 //Routes
 app.use("/users", userRouter);
+app.use("/api/qa", QaRoutes); // Q&A Forum API
 
 //Register
 const User = mongoose.model("register");
@@ -35,14 +37,13 @@ const User = mongoose.model("register");
 
 
 //WebSocket Server
-
-
-
 const io = socketIo(server, {
   cors: corsOptions,
   transports: ['websocket', 'polling']
 });
 
+
+//In-memory Stores
 const documents = new Map();
 const chatRooms = new Map();
 const activeUsers = new Map();
@@ -65,13 +66,44 @@ const getOrCreateChatRoom = (roomId) => {
   return chatRooms.get(roomId);
 };
 
-const generateMessageId = () => {
-  return Date.now() + Math.random().toString(36).substr(2, 9);
-};
+const generateMessageId = () => Date.now() + Math.random().toString(36).substr(2, 9);
 
+
+//Cursor color feature
+const userColors = new Map();
+
+function getRandomColor() {
+  const colors = [
+    "#FF6B6B", // red
+    "#4D96FF", // blue
+    "#6BCB77", // green
+    "#FFD93D", // yellow
+    "#C77DFF", // purple
+    "#F45B69"  // pink
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+
+//Socket.io Logic
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+
+  //Cursor color events
+  socket.on("user-join", ({ user }) => {
+    if (!userColors.has(user)) {
+      userColors.set(user, getRandomColor());
+    }
+  });
+
+  socket.on("cursor-move", ({ user, range }) => {
+    const color = userColors.get(user) || "#FF0000";
+    socket.to(socket.documentId).emit("cursor-update", { user, range, color });
+  });
+
+
+  //Document Collaboration
   socket.on('join-document', async (documentId) => {
     socket.join(documentId);
     socket.documentId = documentId;

@@ -25,6 +25,9 @@ require("dotenv").config();
 //     }
 //     return res.status(201).json({ users });
 // };
+
+
+
 const addUser = async (req, res, next) => {
     const { name, email, password } = req.body;
 
