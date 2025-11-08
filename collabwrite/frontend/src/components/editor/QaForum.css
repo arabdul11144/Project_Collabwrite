@@ -389,3 +389,17 @@
   font-size: small;
   color: gray;
 }
+
+/* Ensure question images are displayed in medium 10cm x 10cm size and centered */
+.question__imagePreview,
+.question__imageDisplay {
+  width: 7cm;
+  height: 7cm;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 10px auto 0; /* top margin 10px, horizontal auto to center */
+  border: 1px solid #ddd;
+  box-shadow: 0px 3px 6px rgba(0,0,0,0.1);
+  display: block; /* makes margin auto work for horizontal centering */
+}
+
