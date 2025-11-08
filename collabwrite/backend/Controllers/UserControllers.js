@@ -1,6 +1,9 @@
 const User = require("../Models/UserModels");
 const bcrypt = require("bcryptjs");
 
+require("dotenv").config();
+
+
 
 //Data insert
 // const addUser = async (req, res, next) => {
@@ -216,6 +219,80 @@ const loginUser = async (req, res, next) => {
 };
 
 
+const nodemailer = require("nodemailer");
+
+// send OTP using Mailtrap
+const sendOtp = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Set expiry for 10 minutes
+        user.otp = otp;
+        user.otpExpiry = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        // Mailtrap SMTP transporter
+        const transporter = nodemailer.createTransport({
+            host: process.env.MAILTRAP_HOST,
+            port: process.env.MAILTRAP_PORT,
+            auth: {
+                user: process.env.MAILTRAP_USER,
+                pass: process.env.MAILTRAP_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: "no-reply@collabwrite.com",
+            to: email,
+            subject: "Your OTP Code for Password Reset",
+            text: `Your OTP is ${otp}. It expires in 10 minutes.`
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.status(200).json({ message: "OTP sent successfully to your email (check Mailtrap inbox)" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error sending OTP" });
+    }
+};
+
+
+
+
+// Verify OTP and reset password
+const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check OTP and expiry
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Assign new password
+    user.password = newPassword;
+
+    // Clear OTP fields
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+    return res.status(200).json({ message: "Password reset successful" });
+};
+
+
+
 
 
 exports.getAllUsers = getAllUsers;
@@ -224,3 +301,5 @@ exports.getById = getById;
 exports.updateUser = updateUser;
 exports.deleteUser = deleteUser;
 exports.loginUser = loginUser;
+exports.sendOtp = sendOtp;
+exports.resetPassword = resetPassword;

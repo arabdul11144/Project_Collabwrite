@@ -41,7 +41,7 @@ function Registerpage() {
   };
 
   const sendRequest = async () => {
-    await axios.post("http://localhost:5000/register", {
+    await axios.post("http://localhost:5000/users", {
       name: String(user.name),
       email: String(user.email),
       password: String(user.password),

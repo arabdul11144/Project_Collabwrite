@@ -8,6 +8,8 @@ import Homepage from './components/homepage/homepage';
 import TextEditor from './components/editor/TextEditor';
 import Qa from './components/editor/QaForum';
 import Chatbot from './components/editor/Chatbot';
+import ForgotPasswordPage from './components/forgotpasswordpage/forgotpasswordpage';
+
 
 
 
@@ -22,6 +24,9 @@ function App() {
       <Route path="/signuppage" element={<Signuppage />} />
       <Route path="/loginpage" element={<Loginpage />} />
       <Route path="/homepage" element={<Homepage />} />
+
+      <Route path="/forgotpasswordpage" element={<ForgotPasswordPage />} />
+
 
       {/* Redirect to a random document */}
       <Route

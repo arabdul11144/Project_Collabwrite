@@ -4,6 +4,8 @@ const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 
+require("dotenv").config();
+
 
 const userRouter = require("./Routes/UserRoutes");
 require("./Models/UserModels");
@@ -25,38 +27,17 @@ app.use(express.json());
 
 
 //Routes
-app.use("/USERS", userRouter);
+app.use("/users", userRouter);
 
 //Register
 const User = mongoose.model("register");
 
-app.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    await User.create({ name, email, password });
-    res.send({ status: "ok" });
-  } catch (err) {
-    res.send({ status: "err" });
-  }
-});
 
-//Login
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email, password });
-    if (!user || user.password !== password) {
-      return res.json({ status: "error", data: "Invalid email or password" });
-    } else {
-      res.json({ status: "ok", data: user });
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ status: "error", data: "An error occurred" });
-  }
-});
 
 //WebSocket Server
+
+
+
 const io = socketIo(server, {
   cors: corsOptions,
   transports: ['websocket', 'polling']
@@ -257,7 +238,8 @@ app.get('/api/chat/:roomId/users', (req, res) => {
 });
 
 //MongoDB + Server Start
-mongoose.connect("mongodb+srv://admin:admin@collabwrite.cs4f8da.mongodb.net/")
+mongoose.connect(process.env.MONGO_URI)
+
 
   .then(() => {
     console.log("Connected to MongoDB");
