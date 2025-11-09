@@ -91,42 +91,60 @@ import React, { useState, useRef, useEffect } from 'react';
       return randomResponse + " This is a simulated AI response for demonstration purposes.";
     };
   
-    const handleSendMessage = () => {
-      if (!inputMessage.trim()) return;
-      if (inputMessage.length > maxCharacters) return;
-  
-      const newMessage = {
-        id: Date.now(),
-        text: inputMessage.trim(),
-        sender: 'user',
-        timestamp: new Date()
-      };
-  
-      setMessages(prev => [...prev, newMessage]);
-      setInputMessage('');
-      setIsTyping(true);
-  
-      // Hide quick actions after first message
-      if (messages.length <= 1) {
-        setShowQuickActions(false);
-      }
-  
-      // Delay based on response length for more realism
-      const botReply = simulateAIResponse(inputMessage);
-      const delay = Math.min(3000, 800 + botReply.length * 30);
-  
-      setTimeout(() => {
-        const botResponse = {
-          id: Date.now() + 1,
-          text: botReply,
-          sender: 'bot',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, botResponse]);
-        setIsTyping(false);
-      }, delay);
+  const handleSendMessage = async () => {
+  if (!inputMessage.trim()) return;
+  if (inputMessage.length > maxCharacters) return;
+
+  const newMessage = {
+    id: Date.now(),
+    text: inputMessage.trim(),
+    sender: 'user',
+    timestamp: new Date()
+  };
+
+  setMessages(prev => [...prev, newMessage]);
+  setInputMessage('');
+  setIsTyping(true);
+
+  // Hide quick actions after first message
+  if (messages.length <= 1) {
+    setShowQuickActions(false);
+  }
+
+  try {
+    // 🔗 Send user input to your FastAPI backend
+    const response = await fetch("http://127.0.0.1:8000/api/chat/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: newMessage.text }),
+    });
+
+    
+    const data = await response.json();
+
+    // 💬 Add AI response to chat
+    const botResponse = {
+      id: Date.now() + 1,
+      text: data.response || "⚠️ No response from AI",
+      sender: 'bot',
+      timestamp: new Date()
     };
-  
+
+    setMessages(prev => [...prev, botResponse]);
+  } catch (error) {
+    console.error("Error fetching AI response:", error);
+    const errorResponse = {
+      id: Date.now() + 2,
+      text: "⚠️ Unable to connect to AI service. Please check your backend.",
+      sender: 'bot',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, errorResponse]);
+  } finally {
+    setIsTyping(false);
+  }
+};
+
     const handleQuickAction = (action) => {
       setInputMessage(action);
       inputRef.current?.focus();
@@ -299,38 +317,38 @@ import React, { useState, useRef, useEffect } from 'react';
   
         {/* Input Area */}
         <div className="input-area">
-          <div style={{ flex: 1, position: 'relative' }}>
-            <textarea
-              ref={inputRef}
-              value={inputMessage}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message here..."
-              rows={1}
-              className={`message-input ${fontSize}`}
-              maxLength={maxCharacters}
-            />
-            {showCharCounter && (
-              <div className={`char-counter ${remainingChars < 50 ? 'warning' : ''}`}>
-                {remainingChars} characters remaining
-              </div>
-            )}
-          </div>
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isTyping || inputMessage.length > maxCharacters}
-            className="send-button"
-            title="Send message"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg"
-              width="24" height="24" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-            </svg>
-          </button>
-        </div>
+        <div style={{ flex: 1, position: 'relative' }}>
+        <textarea
+         ref={inputRef}
+         value={inputMessage}
+         onChange={handleInputChange}
+         onKeyPress={handleKeyPress}
+         placeholder="Type your message here..."
+         rows={1}
+         className={`message-input ${fontSize}`}
+         maxLength={maxCharacters}
+       />
+       {/* Always show character counter */}
+       <div className={`char-counter ${remainingChars < maxCharacters * 0.2 ? 'warning' : ''}`}>
+       {remainingChars} characters remaining
+       </div>
+       </div>
+       <button
+        onClick={handleSendMessage}
+        disabled={!inputMessage.trim() || isTyping || inputMessage.length > maxCharacters}
+    className="send-button"
+    title="Send message"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg"
+      width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round">
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+    </svg>
+  </button>
+</div>
+
       </div>
     );
   };

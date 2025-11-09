@@ -57,22 +57,19 @@ export default function Settings({ show, onClose }) {
         </div>
 
         <div className="setting-item">
-          <img src="/notification.png" className="setting-icon" alt="notifications" />
-          <span>Notifications</span>
-          <label style={{ marginLeft: "auto" }}>
-            <input type="checkbox" /> Enable
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "30px" }}>
-          <label>
+           <div style={{ marginBottom: "10px" }}>
+          <label> 
             <input
+        
               type="checkbox"
               onChange={() => document.body.classList.toggle("dark-mode")}
             />{" "}
-            Dark Mode
+           Dark Mode
           </label>
         </div>
+        </div>
+
+       
 
         {/* ✅ Logout button */}
         <div

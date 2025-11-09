@@ -1,15 +1,35 @@
 import React, { useState } from 'react';
-import ShareModal from '../../ShareModal';
+import ShareModal from './ShareModal';
 
-const ShareButton = ({ docId }) => {
-  const [open, setOpen] = useState(false);
+const ShareButton = ({ documentId, documentTitle }) => {
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="bg-blue-500 text-white p-2 rounded">
-        Share
+      <button 
+        className="action-btn"
+        onClick={() => setShowModal(true)}
+        style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          padding: '10px 20px',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: '600',
+          fontSize: '14px'
+        }}
+      >
+        📤 Share
       </button>
-      {open && <ShareModal docId={docId} onClose={() => setOpen(false)} />}
+
+      {showModal && (
+        <ShareModal
+          documentId={documentId}
+          documentTitle={documentTitle}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 };

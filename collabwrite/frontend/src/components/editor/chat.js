@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
 
-const Chat = ({ roomId, user, socket: externalSocket }) => {
+const Chat = ({ roomId, user, socket }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isOnline, setIsOnline] = useState(false);
@@ -9,15 +8,16 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [users, setUsers] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
+  const [chatMode, setChatMode] = useState('group');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserList, setShowUserList] = useState(false);
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const socketRef = useRef(null);
+  const userListRef = useRef(null);
 
-  // Common emojis for quick access
   const commonEmojis = ['😊', '😂', '❤️', '👍', '👎', '😢', '😮', '😡', '🎉', '🔥', '💯', '🤔'];
 
-  // Safe function to get user initials
   const getUserInitials = (username) => {
     if (!username || typeof username !== 'string') {
       return 'U';
@@ -25,7 +25,6 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
     return username.slice(0, 2).toUpperCase();
   };
 
-  // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -34,56 +33,59 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Socket.IO connection and event handlers
+  // ✅ FIXED: Main socket listener setup with correct dependencies
   useEffect(() => {
-    if (!user || typeof user !== 'string') {
-      console.error('User is required for chat connection');
-      setConnectionStatus('User not defined');
+    if (!socket) {
+      console.error('Socket is null or undefined');
+      setConnectionStatus('No Socket');
+      setIsOnline(false);
       return;
     }
 
-    // Use external socket if provided, otherwise create new connection
-    if (externalSocket) {
-      socketRef.current = externalSocket;
-      setIsOnline(externalSocket.connected);
-    } else {
-      socketRef.current = io('http://localhost:4000', {
-        transports: ['websocket']
-      });
+    if (!user || typeof user !== 'string') {
+      console.error('User is required for chat connection');
+      setConnectionStatus('User Error');
+      return;
     }
 
-    const socket = socketRef.current;
+    console.log('🔌 Chat Socket Status:', socket.connected ? 'CONNECTED' : 'DISCONNECTED');
+    console.log('🔌 Initializing Chat Socket for user:', user);
 
-    // Connection events
+    // ✅ Define all handlers inside useEffect
     const handleConnect = () => {
-      console.log('Chat connected to server');
+      console.log('✅ Chat connected to server');
       setIsOnline(true);
       setConnectionStatus('Connected');
       
-      // Join the chat room
       socket.emit('join-room', { 
         roomId, 
         user: { 
           name: user,
-          photo: `https://via.placeholder.com/30?text=${getUserInitials(user)}`
+          photo: `https://via.placeholder.com/40?text=${getUserInitials(user)}`
         }
       });
     };
 
-    const handleDisconnect = () => {
-      console.log('Chat disconnected from server');
+    const handleDisconnect = (reason) => {
+      console.log('❌ Chat disconnected from server:', reason);
       setIsOnline(false);
       setConnectionStatus('Disconnected');
+      setTimeout(() => {
+        if (socket && !socket.connected) {
+          console.log('🔄 Attempting to reconnect...');
+          socket.connect();
+        }
+      }, 2000);
     };
 
     const handleConnectError = (error) => {
-      console.error('Chat connection error:', error);
+      console.error('⚠️ Chat connection error:', error);
       setConnectionStatus('Connection Error');
+      setIsOnline(false);
     };
 
-    // Room events
     const handleRoomData = (data) => {
-      console.log('Received room data:', data);
+      console.log('📦 Received room data:', data);
       if (data && data.users) {
         setUsers(data.users);
       }
@@ -93,28 +95,28 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
     };
 
     const handleUserJoined = (data) => {
-      console.log('User joined:', data?.user?.name);
+      console.log('👤 User joined:', data?.user?.name);
       if (data && data.users) {
         setUsers(data.users);
       }
     };
 
     const handleUserLeft = (data) => {
-      console.log('User left:', data?.user?.name);
+      console.log('👤 User left:', data?.user?.name);
       if (data && data.users) {
         setUsers(data.users);
       }
     };
 
     const handleUsersUpdated = (data) => {
+      console.log('👥 Users updated:', data?.users?.length);
       if (data && data.users) {
         setUsers(data.users);
       }
     };
 
-    // Message events
     const handleNewMessage = (message) => {
-      console.log('New message:', message);
+      console.log('💬 New message:', message);
       if (message) {
         setMessages(prev => [...prev, message]);
       }
@@ -132,9 +134,8 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
       }
     };
 
-    // Typing events
     const handleUserTyping = (data) => {
-      if (data && data.user) {
+      if (data && data.user && data.user !== user) {
         if (data.typing) {
           setTypingUsers(prev => {
             if (!prev.includes(data.user)) {
@@ -148,11 +149,17 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
       }
     };
 
-    // Set up event listeners
+    // ✅ Check if socket already connected
     if (socket.connected) {
+      console.log('✅ Socket already connected, calling handleConnect');
       handleConnect();
+    } else {
+      console.log('⏳ Waiting for socket to connect...');
+      setIsOnline(false);
+      setConnectionStatus('Connecting...');
     }
 
+    // ✅ Attach all event listeners
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
@@ -164,8 +171,9 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
     socket.on('message-delivered', handleMessageDelivered);
     socket.on('user-typing', handleUserTyping);
 
-    // Cleanup function
+    // ✅ FIXED: Clean up all listeners when component unmounts
     return () => {
+      console.log('🧹 Cleaning up chat listeners');
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
@@ -176,58 +184,75 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
       socket.off('new-message', handleNewMessage);
       socket.off('message-delivered', handleMessageDelivered);
       socket.off('user-typing', handleUserTyping);
-      
-      // Only disconnect if we created the socket (not using external socket)
-      if (!externalSocket && socketRef.current) {
-        socketRef.current.disconnect();
+    };
+  }, [socket]); // ✅ ONLY socket as dependency!
+
+  // Close user list when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userListRef.current && !userListRef.current.contains(e.target)) {
+        setShowUserList(false);
       }
     };
-  }, [roomId, user, externalSocket]);
+    
+    if (showUserList) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showUserList]);
 
-  // Handle typing indicator
   const handleTyping = (value) => {
     setMessageInput(value);
     
-    if (!socketRef.current) return;
+    if (!socket || !isOnline) return;
 
-    // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     
     if (value.trim()) {
-      socketRef.current.emit('typing-start', { roomId });
+      socket.emit('typing-start', { roomId });
       
-      // Stop typing indicator after 2 seconds of no typing
       typingTimeoutRef.current = setTimeout(() => {
-        socketRef.current.emit('typing-stop', { roomId });
+        socket.emit('typing-stop', { roomId });
       }, 2000);
     } else {
-      socketRef.current.emit('typing-stop', { roomId });
+      socket.emit('typing-stop', { roomId });
     }
   };
 
   const sendMessage = () => {
-    if (messageInput.trim() && socketRef.current && isOnline) {
-      // Send message to server
-      socketRef.current.emit('send-message', {
+    if (messageInput.trim() && socket && isOnline) {
+      if (chatMode === 'individual' && !selectedUser) {
+        alert('Please select a user for direct messaging');
+        return;
+      }
+
+      console.log('📤 Sending message:', {
+        mode: chatMode,
+        recipient: selectedUser,
+        message: messageInput.trim()
+      });
+
+      socket.emit('send-message', {
         message: messageInput.trim(),
-        roomId
+        roomId,
+        mode: chatMode,
+        recipient: chatMode === 'individual' ? selectedUser : null
       });
       
       setMessageInput('');
       
-      // Clear typing indicator
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      socketRef.current.emit('typing-stop', { roomId });
+      socket.emit('typing-stop', { roomId });
     }
   };
 
   const getAvatar = (username) => {
     const foundUser = users.find((u) => u.name === username);
-    return foundUser?.photo || `https://via.placeholder.com/30?text=${getUserInitials(username)}`;
+    return foundUser?.photo || `https://via.placeholder.com/40?text=${getUserInitials(username)}`;
   };
 
   const getFormattedDate = () => {
@@ -267,7 +292,15 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
     return messageUser === user;
   };
 
-  // Early return if user is not defined
+  const filteredMessages = chatMode === 'group' 
+    ? messages.filter(msg => !msg.recipient || msg.recipient === null || msg.mode === 'group')
+    : messages.filter(msg => 
+        (msg.sender === user && msg.recipient === selectedUser) || 
+        (msg.sender === selectedUser && msg.recipient === user)
+      );
+
+  const onlineUsers = users.filter(u => u.online && u.name !== user);
+
   if (!user || typeof user !== 'string') {
     return (
       <div style={{ 
@@ -282,9 +315,6 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '18px', marginBottom: '8px' }}>⚠️</div>
           <div>User not defined</div>
-          <div style={{ fontSize: '12px', marginTop: '4px' }}>
-            Please provide a valid username
-          </div>
         </div>
       </div>
     );
@@ -298,42 +328,201 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
       flexDirection: 'column',
       backgroundColor: '#ffffff'
     }}>
-      {/* Header with online users and connection status */}
+      {/* Header */}
       <div style={{ 
         padding: '12px', 
-        backgroundColor: isOnline ? '#f8f9fa' : '#fee2e2', 
+        backgroundColor: isOnline ? '#f8f9fa' : '#fff3cd', 
         borderBottom: '1px solid #e1e5e9', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-          {users.filter(u => u.online).slice(0, 5).map((u) => (
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+          {users.filter(u => u.online).slice(0, 4).map((u) => (
             <img
               key={u.id}
               src={u.photo}
-              alt={`${u.name}'s avatar`}
+              alt={`${u.name}`}
               style={{ 
                 width: '28px', 
                 height: '28px', 
                 borderRadius: '50%', 
-                marginRight: '6px', 
-                marginBottom: '2px',
                 border: '2px solid #22c55e',
                 cursor: 'pointer'
               }}
               title={`${u.name} - Online`}
             />
           ))}
-          {users.filter(u => u.online).length > 5 && (
-            <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '4px' }}>
-              +{users.filter(u => u.online).length - 5} more
-            </span>
+        </div>
+        <div style={{ fontSize: '11px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {isOnline ? (
+            <>
+              <span style={{ width: '8px', height: '8px', backgroundColor: '#22c55e', borderRadius: '50%' }}></span>
+              <span style={{ color: '#16a34a' }}>Connected</span>
+            </>
+          ) : (
+            <>
+              <span style={{ 
+                width: '8px', 
+                height: '8px', 
+                backgroundColor: '#fbbf24', 
+                borderRadius: '50%',
+                animation: 'pulse 1s infinite'
+              }}></span>
+              <span style={{ color: '#b45309' }}>Connecting...</span>
+            </>
           )}
         </div>
-        <div style={{ fontSize: '12px', color: isOnline ? '#6b7280' : '#dc2626' }}>
-          {isOnline ? `${users.filter(u => u.online).length} online` : connectionStatus}
+      </div>
+
+      {/* Chat mode selector */}
+      <div style={{ 
+        padding: '12px 16px', 
+        backgroundColor: '#f8f9fa', 
+        borderBottom: '1px solid #e1e5e9', 
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1f2937' }}>
+          Mode:
         </div>
+        
+        {/* Group Chat Button */}
+        <button
+          onClick={() => {
+            setChatMode('group');
+            setSelectedUser(null);
+            setShowUserList(false);
+          }}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '20px',
+            border: 'none',
+            backgroundColor: chatMode === 'group' ? '#3b82f6' : '#e5e7eb',
+            color: chatMode === 'group' ? '#ffffff' : '#374151',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 0.2s'
+          }}
+        >
+          👥 Everyone
+        </button>
+
+        {/* Individual Chat Button */}
+        <button
+          onClick={() => setChatMode('individual')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '20px',
+            border: 'none',
+            backgroundColor: chatMode === 'individual' ? '#3b82f6' : '#e5e7eb',
+            color: chatMode === 'individual' ? '#ffffff' : '#374151',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 0.2s'
+          }}
+        >
+          👤 Direct
+        </button>
+
+        {/* User selector button */}
+        {chatMode === 'individual' && (
+          <div style={{ position: 'relative' }} ref={userListRef}>
+            <button
+              onClick={() => setShowUserList(!showUserList)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: '2px solid #3b82f6',
+                backgroundColor: '#ffffff',
+                color: '#3b82f6',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+            >
+              {selectedUser ? `💬 ${selectedUser}` : '👥 Select User'}
+            </button>
+
+            {/* Dropdown user list */}
+            {showUserList && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '4px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                zIndex: 1000,
+                minWidth: '200px',
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                {onlineUsers.length > 0 ? (
+                  onlineUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      onClick={() => {
+                        setSelectedUser(u.name);
+                        setShowUserList(false);
+                        setMessages([]);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: 'none',
+                        backgroundColor: selectedUser === u.name ? '#eff6ff' : '#ffffff',
+                        color: '#374151',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        textAlign: 'left',
+                        borderBottom: '1px solid #f3f4f6',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f3f4f6';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = selectedUser === u.name ? '#eff6ff' : '#ffffff';
+                      }}
+                    >
+                      <img 
+                        src={u.photo} 
+                        alt={u.name}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%'
+                        }}
+                      />
+                      <span>{u.name}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#22c55e' }}>🟢</span>
+                    </button>
+                  ))
+                ) : (
+                  <div style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    color: '#9ca3af',
+                    fontSize: '12px'
+                  }}>
+                    No online users
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Chat title */}
@@ -344,13 +533,10 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
         textAlign: 'center' 
       }}>
         <h3 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '16px' }}>
-          💬 Document Chat
+          💬 {chatMode === 'group' ? 'Group Chat' : `💬 ${selectedUser || 'Select User'}`}
         </h3>
-        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+        <div style={{ fontSize: '11px', color: '#9ca3af' }}>
           {getFormattedDate()}
-        </div>
-        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
-          Room: {roomId?.slice(-8)}
         </div>
       </div>
 
@@ -362,7 +548,21 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {messages.length === 0 ? (
+        {chatMode === 'individual' && !selectedUser ? (
+          <div style={{ 
+            textAlign: 'center', 
+            color: '#9ca3af', 
+            fontSize: '14px', 
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: '#f9fafb',
+            borderRadius: '12px',
+            border: '1px dashed #d1d5db'
+          }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>👤</div>
+            <div style={{ fontWeight: '500' }}>Select a user to chat</div>
+          </div>
+        ) : filteredMessages.length === 0 ? (
           <div style={{ 
             textAlign: 'center', 
             color: '#9ca3af', 
@@ -374,15 +574,10 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
             border: '1px dashed #d1d5db'
           }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>💭</div>
-            <div style={{ fontWeight: '500', marginBottom: '4px' }}>
-              {isOnline ? 'Start the conversation!' : 'Connecting to chat...'}
-            </div>
-            <div style={{ fontSize: '12px' }}>
-              Chat with others editing this document
-            </div>
+            <div style={{ fontWeight: '500' }}>No messages yet</div>
           </div>
         ) : (
-          messages.map((msg) => (
+          filteredMessages.map((msg) => (
             <div
               key={msg.id}
               style={{
@@ -401,8 +596,7 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
                   padding: '8px 12px',
                   backgroundColor: '#f9fafb',
                   borderRadius: '12px',
-                  width: '100%',
-                  border: '1px solid #f3f4f6'
+                  width: '100%'
                 }}>
                   {msg.message}
                 </div>
@@ -410,7 +604,7 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
                 <>
                   <img
                     src={getAvatar(msg.user)}
-                    alt={`${msg.user}'s avatar`}
+                    alt={msg.user}
                     style={{ 
                       width: '32px', 
                       height: '32px', 
@@ -437,8 +631,7 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
                         borderRadius: '18px',
                         wordWrap: 'break-word',
                         fontSize: '14px',
-                        lineHeight: '1.4',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                        lineHeight: '1.4'
                       }}
                     >
                       {msg.message}
@@ -447,15 +640,11 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
                       fontSize: '11px', 
                       color: '#9ca3af', 
                       marginTop: '4px',
-                      textAlign: isCurrentUser(msg.user) ? 'right' : 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: isCurrentUser(msg.user) ? 'flex-end' : 'flex-start',
-                      gap: '4px'
+                      textAlign: isCurrentUser(msg.user) ? 'right' : 'left'
                     }}>
                       {formatTime(msg.timestamp)}
                       {isCurrentUser(msg.user) && (
-                        <span style={{ fontSize: '10px' }}>
+                        <span style={{ marginLeft: '4px' }}>
                           {getMessageStatus(msg.status)}
                         </span>
                       )}
@@ -467,7 +656,6 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
           ))
         )}
         
-        {/* Typing indicator */}
         {typingUsers.length > 0 && (
           <div style={{ 
             fontSize: '12px', 
@@ -488,20 +676,19 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
               borderRadius: '50%',
               animation: 'pulse 1s infinite'
             }}></div>
-            {typingUsers.filter(u => u !== user).join(', ')} {typingUsers.filter(u => u !== user).length === 1 ? 'is' : 'are'} typing...
+            {typingUsers.join(', ')} typing...
           </div>
         )}
         
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input area */}
+      {/* Message input */}
       <div style={{ 
         padding: '16px 12px', 
         borderTop: '1px solid #e1e5e9', 
         backgroundColor: '#ffffff' 
       }}>
-        {/* Emoji picker */}
         {showEmojiPicker && (
           <div style={{
             marginBottom: '12px',
@@ -510,8 +697,7 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
             borderRadius: '12px',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '8px',
-            border: '1px solid #e5e7eb'
+            gap: '8px'
           }}>
             {commonEmojis.map((emoji, index) => (
               <button
@@ -537,22 +723,21 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
           </div>
         )}
 
-        {/* Input row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            disabled={!isOnline}
+            disabled={!isOnline || (chatMode === 'individual' && !selectedUser)}
             style={{
               padding: '10px',
               border: '1px solid #d1d5db',
               borderRadius: '50%',
               backgroundColor: showEmojiPicker ? '#eff6ff' : '#ffffff',
-              cursor: isOnline ? 'pointer' : 'not-allowed',
+              cursor: (isOnline && (chatMode === 'group' || selectedUser)) ? 'pointer' : 'not-allowed',
               fontSize: '16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: isOnline ? 1 : 0.5,
+              opacity: (isOnline && (chatMode === 'group' || selectedUser)) ? 1 : 0.5,
               transition: 'all 0.2s',
               minWidth: '40px',
               minHeight: '40px'
@@ -566,8 +751,12 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
             value={messageInput}
             onChange={(e) => handleTyping(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder={isOnline ? "Type a message..." : "Connecting..."}
-            disabled={!isOnline}
+            placeholder={
+              !isOnline ? "Waiting for connection..." : 
+              (chatMode === 'individual' && !selectedUser) ? "Select a user first..." :
+              "Type a message..."
+            }
+            disabled={!isOnline || (chatMode === 'individual' && !selectedUser)}
             style={{
               flex: 1,
               padding: '12px 16px',
@@ -575,69 +764,32 @@ const Chat = ({ roomId, user, socket: externalSocket }) => {
               borderRadius: '25px',
               outline: 'none',
               fontSize: '14px',
-              backgroundColor: isOnline ? '#ffffff' : '#f9fafb',
-              opacity: isOnline ? 1 : 0.7,
-              transition: 'border-color 0.2s, box-shadow 0.2s'
-            }}
-            onFocus={(e) => {
-              if (isOnline) {
-                e.target.style.borderColor = '#3b82f6';
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#d1d5db';
-              e.target.style.boxShadow = 'none';
+              backgroundColor: (isOnline && (chatMode === 'group' || selectedUser)) ? '#ffffff' : '#f9fafb',
+              opacity: (isOnline && (chatMode === 'group' || selectedUser)) ? 1 : 0.7
             }}
           />
           
           <button
             onClick={sendMessage}
-            disabled={!messageInput.trim() || !isOnline}
+            disabled={!messageInput.trim() || !isOnline || (chatMode === 'individual' && !selectedUser)}
             style={{
               padding: '12px 18px',
-              backgroundColor: (messageInput.trim() && isOnline) ? '#3b82f6' : '#9ca3af',
+              backgroundColor: (messageInput.trim() && isOnline && (chatMode === 'group' || selectedUser)) ? '#3b82f6' : '#9ca3af',
               color: 'white',
               border: 'none',
               borderRadius: '25px',
-              cursor: (messageInput.trim() && isOnline) ? 'pointer' : 'not-allowed',
+              cursor: (messageInput.trim() && isOnline && (chatMode === 'group' || selectedUser)) ? 'pointer' : 'not-allowed',
               fontSize: '14px',
               fontWeight: '600',
               transition: 'all 0.2s',
               minWidth: '60px'
             }}
-            onMouseEnter={(e) => {
-              if (messageInput.trim() && isOnline) {
-                e.target.style.backgroundColor = '#2563eb';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (messageInput.trim() && isOnline) {
-                e.target.style.backgroundColor = '#3b82f6';
-              }
-            }}
           >
             Send
           </button>
         </div>
-
-        {/* Connection status indicator */}
-        {!isOnline && (
-          <div style={{
-            textAlign: 'center',
-            fontSize: '12px',
-            color: '#ef4444',
-            marginTop: '8px',
-            padding: '4px 8px',
-            backgroundColor: '#fef2f2',
-            borderRadius: '6px'
-          }}>
-            {connectionStatus} - Retrying...
-          </div>
-        )}
       </div>
 
-      {/* CSS animations */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

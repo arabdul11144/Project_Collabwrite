@@ -1,8 +1,8 @@
 const User = require("../Models/UserModels");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
 
 require("dotenv").config();
+
 
 
 
@@ -11,7 +11,7 @@ const addUser = async (req, res, next) => {
 
     try {
         // Step 1: Validate password before saving
-        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{5,8}$/;
+        const passwordRegex = /^(?=.[A-Z])(?=.\d)[A-Za-z\d]{5,8}$/;
         if (!passwordRegex.test(password)) {
             return res.status(400).json({
                 message:
@@ -65,6 +65,7 @@ const getAllUsers = async (req, res, next) => {
 
 
 
+
 const getById = async (req, res, next) => {
     const id = req.params.id;
     try {
@@ -80,6 +81,8 @@ const getById = async (req, res, next) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+
+
 
 
 
@@ -110,6 +113,8 @@ const updateUser = async (req, res, next) => {
 };
 
 
+
+//delete user details
 const deleteUser = async (req, res, next) => {
     const id = req.params.id;
     let users;
@@ -127,6 +132,7 @@ const deleteUser = async (req, res, next) => {
 
 
 
+//User Login
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -158,6 +164,9 @@ const loginUser = async (req, res, next) => {
 };
 
 
+
+
+const nodemailer = require("nodemailer");
 
 // send OTP using Mailtrap
 const sendOtp = async (req, res) => {
@@ -202,6 +211,7 @@ const sendOtp = async (req, res) => {
         return res.status(500).json({ message: "Server error sending OTP" });
     }
 };
+
 
 
 
