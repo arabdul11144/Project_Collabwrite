@@ -21,32 +21,40 @@ function Registerpage() {
     setUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
 
+
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setRegisterError("");
+  e.preventDefault();
+  setRegisterError("");
 
-    if (user.password !== confirmPassword) {
-      console.error("Passwords do not match");
-      setRegisterError("Passwords do not match");
-      return;
-    }
-
-    sendRequest().then(() => {
-      console.log("Register successful");
-      navigate('/loginpage');
-    }).catch((err) => {
-      console.error("Error during Register:", err);
-      setRegisterError("Server error. Please try again.");
-    });
-  };
-
-  const sendRequest = async () => {
-    await axios.post("http://localhost:5000/users", {
-      name: String(user.name),
-      email: String(user.email),
-      password: String(user.password),
-    }).then((res) => res.data);
+  if (user.password !== confirmPassword) {
+    setRegisterError("Passwords do not match");
+    return;
   }
+
+  try {
+    await axios.post("http://localhost:5000/users", {
+      name: user.name,
+      email: user.email,
+      password: user.password,
+    });
+
+    console.log("Register successful");
+    navigate('/loginpage');
+  } catch (err) {
+    console.error("Error during Register:", err);
+
+    // Check if backend sent a custom message
+    if (err.response && err.response.data && err.response.data.message) {
+      setRegisterError(err.response.data.message);
+    } else {
+      setRegisterError("Server error. Please try again.");
+    }
+  }
+};
+
+
+ 
 
   return (
     <div className="register-background">

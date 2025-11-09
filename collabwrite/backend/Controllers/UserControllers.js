@@ -1,30 +1,8 @@
 const User = require("../Models/UserModels");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 
 require("dotenv").config();
-
-
-
-//Data insert
-// const addUser = async (req, res, next) => {
-//     const { name, email, password } = req.body;
-//     let users;
-//     try {
-//         users = new User({
-//             name,
-//             email,
-//           password
-//         });
-//         await users.save();
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(500).json({ message: "Server error" });
-//     }
-//     if (!users) {
-//         return res.status(400).json({ message: "unable to add user" });
-//     }
-//     return res.status(201).json({ users });
-// };
 
 
 
@@ -32,17 +10,26 @@ const addUser = async (req, res, next) => {
     const { name, email, password } = req.body;
 
     try {
-        // Check if email already exists
+        // Step 1: Validate password before saving
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{5,8}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                message:
+                    "Password must contain at least 1 UPPERCASE, 1 number, and be between 5 - 8 characters",
+            });
+        }
+
+        // Step 2: Check if email already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email already registered" });
         }
 
-        // Create new user (password will be hashed automatically)
+        // Step 3: Create new user (password will hashed automatically)
         const newUser = new User({ name, email, password });
         await newUser.save();
 
-        // Don’t send password back in response
+        // Step 4: Remove password from response
         const { password: _, ...userWithoutPassword } = newUser._doc;
 
         return res.status(201).json({
@@ -58,21 +45,8 @@ const addUser = async (req, res, next) => {
 
 
 
-//Data Display
-// const getAllUsers = async (req, res, next) => {
-//     let users;
-//     try {
-//         users = await User.find();
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(500).json({ message: "Server error" });
-//     }
-//     if (!users || users.length === 0) {
-//         return res.status(404).json({ message: "No users found" });
-//     }
 
-//     return res.status(200).json({ users });
-// };
+
 const getAllUsers = async (req, res, next) => {
     try {
         const users = await User.find().select("-password"); // exclude password field
@@ -90,21 +64,6 @@ const getAllUsers = async (req, res, next) => {
 
 
 
-//Get by ID
-// const getById = async (req, res, next) => {
-//     const id = req.params.id;
-//     let users;
-//     try {
-//         users = await User.findById(id);
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(500).json({ message: "Server error" });
-//     }
-//     if (!users) {
-//         return res.status(404).json({ message: "user not found" });
-//     }
-//     return res.status(200).json({ users });
-// };
 
 const getById = async (req, res, next) => {
     const id = req.params.id;
@@ -123,26 +82,6 @@ const getById = async (req, res, next) => {
 };
 
 
-
-//update user details
-// const updateUser = async (req, res, next) => {
-//     const id = req.params.id;
-//     const { name, email, password } = req.body;
-//     let users;
-
-//     try {
-//         users = await User.findByIdAndUpdate(id, { name: name, email: email, password: password });
-//         // users = await User.save();
-//         users = await User.findByIdAndUpdate(id, { name, email, password }, { new: true });
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(500).json({ message: "Server error" });
-//     }
-//     if (!users) {
-//         return res.status(404).json({ message: "unable to update user details" });
-//     }
-//     return res.status(200).json({ users });
-// };
 
 const updateUser = async (req, res, next) => {
     const id = req.params.id;
@@ -171,8 +110,6 @@ const updateUser = async (req, res, next) => {
 };
 
 
-
-//delete user details
 const deleteUser = async (req, res, next) => {
     const id = req.params.id;
     let users;
@@ -190,7 +127,6 @@ const deleteUser = async (req, res, next) => {
 
 
 
-//User Login
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -222,7 +158,6 @@ const loginUser = async (req, res, next) => {
 };
 
 
-const nodemailer = require("nodemailer");
 
 // send OTP using Mailtrap
 const sendOtp = async (req, res) => {
@@ -267,7 +202,6 @@ const sendOtp = async (req, res) => {
         return res.status(500).json({ message: "Server error sending OTP" });
     }
 };
-
 
 
 

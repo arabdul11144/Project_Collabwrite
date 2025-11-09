@@ -18,24 +18,6 @@ function Loginpage() {
     setUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoginError(""); // Reset error message on new submission
-  //   try {
-  //     const response = await sendRequest();
-  //     console.log("Response:", response);
-  //     if (response.status === "ok") {
-  //       console.log("Login successful");
-  //       navigate('/homepage');
-  //     } else {
-  //       console.error("Login failed");
-  //       setLoginError("Invalid email or password");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error during login:", err);
-  //     setLoginError("Server error. Please try again.");
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +27,6 @@ function Loginpage() {
       const response = await sendRequest();
       console.log("Response:", response);
 
-      // Check backend message instead of 'status'
       if (response.message === "Login successful!") {
         console.log("Login successful");
         navigate('/homepage');
@@ -55,10 +36,16 @@ function Loginpage() {
 
     } catch (err) {
       console.error("Error during login:", err);
-      setLoginError("Server error. Please try again.");
+
+      // Handle specific backend error messages
+      if (err.response && err.response.data && err.response.data.message) {
+        // Show backend message directly ("User not found")
+        setLoginError(err.response.data.message);
+      } else {
+        setLoginError("Server error. Please try again.");
+      }
     }
   };
-
 
 
 
