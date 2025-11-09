@@ -12,6 +12,8 @@ function Loginpage() {
   });
 
   const [loginError, setLoginError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,8 +92,23 @@ function Loginpage() {
 
             <label>Password :</label>
             <div className="password-box">
-              <input type="password" name="password" value={user.password} onChange={handleInputChange} placeholder="Password" required />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={user.password}
+                onChange={handleInputChange}
+                placeholder="Password"
+                required
+              />
+              <span
+                className="eye-icon"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{ cursor: "pointer" }}
+              >
+                {showPassword ? "🔓" : "🔒"}
+              </span>
             </div>
+
 
             <Link to='/forgotpasswordpage' className="forgot-password">Forgot Password?</Link>
 

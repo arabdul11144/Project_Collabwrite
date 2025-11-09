@@ -12,8 +12,10 @@ function Registerpage() {
   });
 
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [registerError, setRegisterError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
 
   const handleInputChange = (e) => {
@@ -24,37 +26,37 @@ function Registerpage() {
 
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setRegisterError("");
+    e.preventDefault();
+    setRegisterError("");
 
-  if (user.password !== confirmPassword) {
-    setRegisterError("Passwords do not match");
-    return;
-  }
-
-  try {
-    await axios.post("http://localhost:5000/users", {
-      name: user.name,
-      email: user.email,
-      password: user.password,
-    });
-
-    console.log("Register successful");
-    navigate('/loginpage');
-  } catch (err) {
-    console.error("Error during Register:", err);
-
-    // Check if backend sent a custom message
-    if (err.response && err.response.data && err.response.data.message) {
-      setRegisterError(err.response.data.message);
-    } else {
-      setRegisterError("Server error. Please try again.");
+    if (user.password !== confirmPassword) {
+      setRegisterError("Passwords do not match");
+      return;
     }
-  }
-};
+
+    try {
+      await axios.post("http://localhost:5000/users", {
+        name: user.name,
+        email: user.email,
+        password: user.password,
+      });
+
+      console.log("Register successful");
+      navigate('/loginpage');
+    } catch (err) {
+      console.error("Error during Register:", err);
+
+      // Check if backend sent a custom message
+      if (err.response && err.response.data && err.response.data.message) {
+        setRegisterError(err.response.data.message);
+      } else {
+        setRegisterError("Server error. Please try again.");
+      }
+    }
+  };
 
 
- 
+
 
   return (
     <div className="register-background">
@@ -98,25 +100,45 @@ function Registerpage() {
             </div>
 
             <label htmlFor="password">Password :</label>
-            <input
-              type="password"
-              name="password"
-              value={user.password}
-              onChange={handleInputChange}
-              id="password"
-              placeholder=" Password"
-              required
-            />
+            <div className="password-box">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={user.password}
+                onChange={handleInputChange}
+                id="password"
+                placeholder="Password"
+                required
+              />
+              <span
+                className="eye-icon"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{ cursor: "pointer" }}
+              >
+                {showPassword ? "🔓" : "🔒"}
+              </span>
+            </div>
+
 
             <label htmlFor="confirm-password">Confirm Password :</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              id="confirm-password"
-              placeholder=" Confirm Password"
-              required
-            />
+            <div className="password-box">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                id="confirm-password"
+                placeholder="Confirm Password"
+                required
+              />
+              <span
+                className="eye-icon"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                style={{ cursor: "pointer" }}
+              >
+                {showConfirmPassword ? "🔓" : "🔒"}
+              </span>
+            </div>
+
 
 
             <button type="submit">Sign up</button>

@@ -145,9 +145,9 @@
   border-radius: 50%;
   width: 60px;
   height: 60px;
-  line-height: 60px; 
+  line-height: 60px;
   margin-left: auto;
-  margin-right:auto;
+  margin-right: auto;
 }
 
 .register-box h2 {
@@ -276,4 +276,21 @@ button[type="submit"] {
   height: auto;
   margin-top: 10px;
   margin-bottom: 10px;
+}
+
+/*eye icon positioning*/
+.password-box {
+  position: relative;
+}
+
+.password-box input {
+  width: 100%;
+  padding-right: 30px; /* space for the icon */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 40%;
+  transform: translateY(-50%);
 }
