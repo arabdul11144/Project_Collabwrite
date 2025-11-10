@@ -187,7 +187,7 @@ const googleLogin = async (req, res) => {
 
         // Check if user exists
         let user = await User.findOne({ email });
-        if(!user){
+        if (!user) {
             // If not, create new user
             user = await User.create({
                 googleId: sub,
@@ -203,7 +203,7 @@ const googleLogin = async (req, res) => {
 
         res.status(200).json({ user, token: myToken });
 
-    } catch(err){
+    } catch (err) {
         console.error(err);
         res.status(400).json({ message: "Invalid Google token" });
     }
@@ -233,15 +233,31 @@ const sendOtp = async (req, res) => {
         user.otpExpiry = Date.now() + 10 * 60 * 1000;
         await user.save();
 
+
+
         // Mailtrap SMTP transporter
+        // const transporter = nodemailer.createTransport({
+        //     host: process.env.MAILTRAP_HOST,
+        //     port: process.env.MAILTRAP_PORT,
+        //     auth: {
+        //         user: process.env.MAILTRAP_USER,
+        //         pass: process.env.MAILTRAP_PASS
+        //     }
+        // });
+
+
+
+        // nodemailer SMTP transporter
         const transporter = nodemailer.createTransport({
-            host: process.env.MAILTRAP_HOST,
-            port: process.env.MAILTRAP_PORT,
+            service: "gmail",
             auth: {
-                user: process.env.MAILTRAP_USER,
-                pass: process.env.MAILTRAP_PASS
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS
             }
         });
+
+
+
 
         const mailOptions = {
             from: "no-reply@collabwrite.com",
