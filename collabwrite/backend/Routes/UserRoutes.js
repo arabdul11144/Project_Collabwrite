@@ -12,6 +12,8 @@ router.post("/reset-password", UserController.resetPassword);
 router.get("/:id", UserController.getById);
 router.put("/:id", UserController.updateUser);
 router.delete("/:id", UserController.deleteUser);
+router.post("/google-login", UserController.googleLogin);
+
 
 
 

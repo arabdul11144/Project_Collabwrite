@@ -2,8 +2,17 @@ import React, { useState } from 'react';
 import './loginpage.css';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { GoogleLogin } from "@react-oauth/google";
+
+
+
+
+
+
 
 function Loginpage() {
+
+
 
   const navigate = useNavigate();
   const [user, setUser] = useState({
@@ -117,9 +126,29 @@ function Loginpage() {
             <div className="divider"><span>or</span></div>
 
             <div className="social-login">
-              <button className="google">G</button>
-              <button className="facebook">f</button>
-              <button className="linkedin">in</button>
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    const token = credentialResponse.credential;
+
+                    // Send token to backend
+                    const res = await axios.post("http://localhost:5000/users/google-login", {
+                      token
+                    });
+
+                    console.log("Google login response:", res.data);
+                    if (res.data.user) {
+                      navigate('/homepage');
+                    }
+                  } catch (err) {
+                    console.error("Google login failed:", err);
+                  }
+                }}
+                onError={() => {
+                  console.log("Google login failed");
+                }}
+              />
+
             </div>
 
             <p className="signup-text">Don't Have an account? <Link to='/signuppage'>Sign up</Link></p>
@@ -133,4 +162,4 @@ function Loginpage() {
   )
 }
 
-export default Loginpage
+export default Loginpage;

@@ -1,7 +1,8 @@
+import { GoogleLogin } from "@react-oauth/google"; // Add this import
+import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import './signuppage.css';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 function Registerpage() {
   const navigate = useNavigate();
@@ -16,14 +17,10 @@ function Registerpage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,14 +37,9 @@ function Registerpage() {
         email: user.email,
         password: user.password,
       });
-
-      console.log("Register successful");
       navigate('/loginpage');
     } catch (err) {
-      console.error("Error during Register:", err);
-
-      // Check if backend sent a custom message
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response?.data?.message) {
         setRegisterError(err.response.data.message);
       } else {
         setRegisterError("Server error. Please try again.");
@@ -55,15 +47,26 @@ function Registerpage() {
     }
   };
 
+  const handleGoogleRegister = async (credentialResponse) => {
+    try {
+      const token = credentialResponse.credential;
 
+      const res = await axios.post("http://localhost:5000/users/google-login", { token });
 
+      if (res.data.user) {
+        navigate('/homepage');
+      }
+    } catch (err) {
+      console.error("Google registration failed:", err);
+      setRegisterError("Google registration failed. Try again.");
+    }
+  };
 
   return (
     <div className="register-background">
-      <div class="circle circle1"></div>
-      <div class="circle circle2"></div>
-      <div class="circle circle3"></div>
-
+      <div className="circle circle1"></div>
+      <div className="circle circle2"></div>
+      <div className="circle circle3"></div>
 
       <div className="register-card">
         <div className="register-left">
@@ -83,72 +86,44 @@ function Registerpage() {
 
             {registerError && <p className="error-message">{registerError}</p>}
 
-            <label htmlFor="name">Name :</label>
-            <input
-              type="text"
-              name="name"
-              value={user.name}
-              onChange={handleInputChange}
-              id="name"
-              placeholder=" Name"
-              required
-            />
+            <input type="text" name="name" value={user.name} onChange={handleInputChange} placeholder="Name" required />
 
-            <label>Email :</label>
-            <div className="password-box">
-              <input type="email" name="email" value={user.email} onChange={handleInputChange} id="email" placeholder="Username" required />
-            </div>
 
-            <label htmlFor="password">Password :</label>
+            <input type="email" name="email" value={user.email} onChange={handleInputChange} placeholder="Email" required />
+
             <div className="password-box">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={user.password}
                 onChange={handleInputChange}
-                id="password"
                 placeholder="Password"
                 required
               />
-              <span
-                className="eye-icon"
-                onClick={() => setShowPassword((prev) => !prev)}
-                style={{ cursor: "pointer" }}
-              >
-                {showPassword ? "🔓" : "🔒"}
-              </span>
+              <span className="eye-icon" onClick={() => setShowPassword(prev => !prev)}>{showPassword ? "🔓" : "🔒"}</span>
             </div>
 
-
-            <label htmlFor="confirm-password">Confirm Password :</label>
             <div className="password-box">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                id="confirm-password"
                 placeholder="Confirm Password"
                 required
               />
-              <span
-                className="eye-icon"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                style={{ cursor: "pointer" }}
-              >
-                {showConfirmPassword ? "🔓" : "🔒"}
-              </span>
+              <span className="eye-icon" onClick={() => setShowConfirmPassword(prev => !prev)}>{showConfirmPassword ? "🔓" : "🔒"}</span>
             </div>
-
-
 
             <button type="submit">Sign up</button>
 
             <div className="divider"><span>or</span></div>
 
             <div className="social-register">
-              <button className="google">G</button>
-              <button className="facebook">f</button>
-              <button className="linkedin">in</button>
+              <GoogleLogin
+                onSuccess={handleGoogleRegister}
+                onError={() => setRegisterError("Google registration failed")}
+              />
+
             </div>
 
             <p className="signup-text">Already have an account? <Link to='/loginpage'>Log in</Link></p>
@@ -157,9 +132,6 @@ function Registerpage() {
       </div>
     </div>
   );
-
-
 }
 
 export default Registerpage;
-

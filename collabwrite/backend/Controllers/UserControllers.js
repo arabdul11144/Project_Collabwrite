@@ -1,5 +1,11 @@
 const User = require("../Models/UserModels");
 const bcrypt = require("bcryptjs");
+const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 
 require("dotenv").config();
@@ -167,6 +173,45 @@ const loginUser = async (req, res, next) => {
 
 
 
+const googleLogin = async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const { sub, email, name, picture } = payload;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+        if(!user){
+            // If not, create new user
+            user = await User.create({
+                googleId: sub,
+                name,
+                email,
+                password: sub + process.env.JWT_SECRET, // dummy password
+                picture
+            });
+        }
+
+        // Generate JWT for your app
+        const myToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+        res.status(200).json({ user, token: myToken });
+
+    } catch(err){
+        console.error(err);
+        res.status(400).json({ message: "Invalid Google token" });
+    }
+};
+
+
+
+
 
 const nodemailer = require("nodemailer");
 
@@ -207,13 +252,12 @@ const sendOtp = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        return res.status(200).json({ message: "OTP sent successfully to your email (check Mailtrap inbox)" });
+        return res.status(200).json({ message: "An OTP has sent to your email" });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Server error sending OTP" });
     }
 };
-
 
 
 
@@ -252,3 +296,4 @@ exports.deleteUser = deleteUser;
 exports.loginUser = loginUser;
 exports.sendOtp = sendOtp;
 exports.resetPassword = resetPassword;
+exports.googleLogin = googleLogin;

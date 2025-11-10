@@ -228,32 +228,11 @@ button[type="submit"] {
 }
 
 .social-login {
-  display: flex;
-  justify-content: space-between;
   margin-bottom: 15px;
-}
-
-.social-login button {
-  width: 30%;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-size: 18px;
-  color: white;
 }
 
-.google {
-  background-color: #db4437;
-}
 
-.facebook {
-  background-color: #3b5998;
-}
-
-.linkedin {
-  background-color: #0077b5;
-}
 
 .signup-text {
   text-align: center;
@@ -295,3 +274,5 @@ button[type="submit"] {
   top: 40%;
   transform: translateY(-50%);
 }
+
+
