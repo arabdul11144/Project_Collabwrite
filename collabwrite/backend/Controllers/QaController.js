@@ -1,8 +1,9 @@
 // backend/Controllers/QaController.js
 const Question = require("../Models/QuestionModel");
 const Answer = require("../Models/AnswerModel");
+const User = require("../Models/UserModels");
 
-// ===================== Add Question =====================
+//Add Question
 exports.addQuestion = async (req, res) => {
   try {
     const { question, imageUrl, userId } = req.body;
@@ -25,7 +26,7 @@ exports.addQuestion = async (req, res) => {
   }
 };
 
-// ===================== Get All Questions =====================
+//Get All Questions
 exports.getQuestions = async (req, res) => {
   try {
     const questions = await Question.find()
@@ -38,7 +39,7 @@ exports.getQuestions = async (req, res) => {
   }
 };
 
-// ===================== Add Answer =====================
+// Add Answer
 exports.addAnswer = async (req, res) => {
   try {
     const { answer, questionId, userId } = req.body;
@@ -91,7 +92,7 @@ exports.deleteAnswer = async (req, res) => {
     const deleted = await Answer.findByIdAndDelete(answerId);
     if (!deleted) return res.status(404).json({ message: "Answer not found" });
 
-    console.log("✅ Answer deleted:", answerId);
+    console.log("Answer deleted:", answerId);
     return res.status(200).json({ message: "Answer deleted", answerId });
   } catch (err) {
     console.error("deleteAnswer error:", err);

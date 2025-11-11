@@ -2,6 +2,8 @@ const User = require("../Models/UserModels");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
+const LoggedInUser = require("../Models/LoggedInUser");
+
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -160,6 +162,9 @@ const loginUser = async (req, res, next) => {
         // Exclude password before sending back user info
         const { password: _, ...safeUser } = user._doc;
 
+         // Save user name to LoggedInUser collection
+        await LoggedInUser.create({ name: user.name, email: user.email });
+
         res.status(200).json({
             message: "Login successful!",
             user: safeUser
@@ -200,6 +205,9 @@ const googleLogin = async (req, res) => {
 
         // Generate JWT for your app
         const myToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+        await LoggedInUser.create({ name: user.name, email: user.email });
+
 
         res.status(200).json({ user, token: myToken });
 

@@ -1,13 +1,9 @@
-// ============================================
-// File: backend/Controllers/ChatController.js
-// ============================================
 
-// In-memory storage (replace with MongoDB in production)
 const rooms = {};
 const userSockets = {};
 
 class ChatController {
-  
+
   // ========== Initialize Room ==========
   static initializeRoom(roomId) {
     if (!rooms[roomId]) {
@@ -20,7 +16,7 @@ class ChatController {
     return rooms[roomId];
   }
 
-  // ========== Join Room ==========
+  //Join Room
   static joinRoom(socket, data, io) {
     const { roomId, user } = data;
     console.log(`👤 User ${user.name} joining room ${roomId}`);
@@ -67,7 +63,7 @@ class ChatController {
     console.log(`✅ ${user.name} joined room ${roomId}. Total users: ${rooms[roomId].users.length}`);
   }
 
-  // ========== Send Message ==========
+  //Send Message
   static sendMessage(socket, data, io) {
     const { message, roomId, mode, recipient } = data;
     const sender = socket.userName;
@@ -107,7 +103,7 @@ class ChatController {
     } else if (mode === 'individual' && recipient) {
       // ✅ SEND TO INDIVIDUAL USER
       console.log(`📨 Sending direct message to ${recipient}`);
-      
+
       // Send to recipient
       const recipientSocketId = userSockets[recipient];
       if (recipientSocketId) {
@@ -116,7 +112,7 @@ class ChatController {
       } else {
         console.warn(`⚠️ Recipient ${recipient} not found in active users`);
       }
-      
+
       // Send to sender (so they see their own message)
       socket.emit('new-message', messageObj);
       console.log(`✅ Message sent to sender ${sender}`);
@@ -129,7 +125,7 @@ class ChatController {
     });
   }
 
-  // ========== Typing Start ==========
+  //Typing Start
   static typingStart(socket, data, io) {
     const { roomId } = data;
     const userName = socket.userName;
@@ -149,7 +145,7 @@ class ChatController {
     console.log(`⌨️ ${userName} is typing in ${roomId}`);
   }
 
-  // ========== Typing Stop ==========
+  //Typing Stop
   static typingStop(socket, data, io) {
     const { roomId } = data;
     const userName = socket.userName;
@@ -169,7 +165,7 @@ class ChatController {
     console.log(`✋ ${userName} stopped typing in ${roomId}`);
   }
 
-  // ========== User Disconnect ==========
+  //user Disconnect
   static userDisconnect(socket, io) {
     console.log('❌ User disconnected:', socket.id);
 
@@ -188,7 +184,7 @@ class ChatController {
 
       // Notify others
       const onlineUsers = rooms[roomId].users.filter(u => u.online);
-      
+
       io.to(roomId).emit('user-left', {
         user: { name: userName },
         users: onlineUsers
@@ -202,7 +198,7 @@ class ChatController {
     }
   }
 
-  // ========== Get Room Info ==========
+  //Get Room Info
   static getRoomInfo(roomId) {
     if (!rooms[roomId]) return null;
     return {
@@ -213,7 +209,7 @@ class ChatController {
     };
   }
 
-  // ========== Get All Rooms ==========
+  //Get All Rooms
   static getAllRooms() {
     const roomStats = Object.keys(rooms).map(roomId => ({
       roomId,
@@ -224,7 +220,7 @@ class ChatController {
     return roomStats;
   }
 
-  // ========== Clear Old Messages (Optional) ==========
+  //Clear Old Messages
   static clearOldMessages(roomId, maxMessages = 1000) {
     if (rooms[roomId] && rooms[roomId].messages.length > maxMessages) {
       const removed = rooms[roomId].messages.length - maxMessages;

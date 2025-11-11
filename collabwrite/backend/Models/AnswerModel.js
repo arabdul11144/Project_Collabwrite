@@ -6,7 +6,7 @@ const answerSchema = new Schema(
   {
     answer: { type: String, required: true },
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "register" }, // reference to user
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // reference to user
   },
   { timestamps: true }
 );

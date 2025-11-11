@@ -5,8 +5,8 @@ const Schema = mongoose.Schema;
 const questionSchema = new Schema(
   {
     question: { type: String, required: true },
-    imageUrl: { type: String }, // optional image/link
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "register" }, // reference to user (your model name is "register")
+    imageUrl: { type: String },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // 👈 renamed field
   },
   { timestamps: true }
 );

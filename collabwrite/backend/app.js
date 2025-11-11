@@ -32,8 +32,8 @@ app.use("/users", userRouter);
 app.use("/api/qa", QaRoutes); // Q&A Forum API
 
 //Register
-const User = mongoose.model("register");
-
+const Question = require("./Models/QuestionModel");
+const User = require("./Models/UserModels");
 
 
 //WebSocket Server

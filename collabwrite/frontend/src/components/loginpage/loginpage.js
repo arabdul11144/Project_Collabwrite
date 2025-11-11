@@ -40,6 +40,10 @@ function Loginpage() {
 
       if (response.message === "Login successful!") {
         console.log("Login successful");
+
+        localStorage.setItem("loggedInUser", JSON.stringify(response.user));
+
+
         navigate('/homepage');
       } else {
         setLoginError(response.message || "Invalid email or password");
@@ -138,6 +142,7 @@ function Loginpage() {
 
                     console.log("Google login response:", res.data);
                     if (res.data.user) {
+                        localStorage.setItem("loggedInUser", JSON.stringify(res.data.user));
                       navigate('/homepage');
                     }
                   } catch (err) {
